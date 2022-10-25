@@ -1,5 +1,6 @@
 version: 2
 
+# Configs and metadata about each model being created by dbt
 models:
  - name: stg_facility
    description: "Staging table for facility information"

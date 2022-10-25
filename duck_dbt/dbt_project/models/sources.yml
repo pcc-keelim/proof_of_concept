@@ -1,5 +1,6 @@
 version: 2
 
+# The sources needed to create each dbt model. In this case we are using parquet files
 sources:
  - name: parquet
    tables:
