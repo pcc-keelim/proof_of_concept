@@ -1,0 +1,13 @@
+name: null
+
+channels: 
+ - https://nexus.dev.collectivemedicaltech.com/repository/conda-proxy/pkgs/main
+
+dependencies:
+ - python=3.8
+ - pip=20
+ - pip:
+    - dbt-duckdb
+    - duckdb
+    - dbt-core
+ 

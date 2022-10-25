@@ -1,0 +1,28 @@
+version: 2
+
+models:
+  - name: inter_ce_fact
+    description: "comprehensive encounter fact table"
+    meta: {'to_parquet': true}
+
+metrics:
+  - name: visit_count
+    label: Visit Count
+    model: ref('inter_ce_fact')
+    description: "The count of visits to a hospital on the network"
+    calculation_method: count
+    expression: "p_v.id"
+    timestamp: "p_v.created_on"
+    time_grains: [day, week]
+    dimensions:
+      - "ce.facility_id"
+      - "ce.patient_id"
+      - "p_v.major_class"
+      - "ce.type"
+    filters:
+      - field: "ce.deleted_on"
+        operator: 'IS NOT'
+        value:  'NULL'
+      - field: "p_v.deleted_on"
+        operator: 'IS NOT'
+        value: 'NULL'
