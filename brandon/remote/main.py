@@ -5,12 +5,11 @@ import yaml
 
 from fastapi import FastAPI
 
-from brandon.remote.data_warehouse_remote import DataWarehouse
-from smbclient import encrypted_drive
+from brandon.remote.data_warehouse_remote import DataWarehouseRemote
+from brandon.smbclient import encrypted_drive
 
 
-with open('secrets.yaml') as secrets:
-    secrets = yaml.safe_load(secrets)
+
 
 app = FastAPI()
 
@@ -29,17 +28,21 @@ class QueryEngine(str, Enum):
 @app.get("/submit_query/{query_engine}/{query_string}")
 def execute_query(query_engine: QueryEngine, query_string: str):
 
+    # Get credentials
+    with open('../secrets.yaml') as secrets:
+        secrets = yaml.safe_load(secrets)
+
     # Determine query engine
     if query_engine.value == 'duckdb':
-        query_results_df = DataWarehouse.execute_query(query_string)
+        query_results_df = DataWarehouseRemote.execute_query(query_string)
     elif query_engine.value == 'dask':
         pass
 
     # Determine file name and write to parquet
     run_time_stamp = str(datetime.now())[:-7].replace(" ","_").replace(":",'-')
     file_name = f"results_{run_time_stamp}.parquet"
-    vm_query_results_filepath = os.path.join(DataWarehouse.VM_DEFAULT_QUERY_RESULTS_LOCATION, file_name)
-    encrypted_query_results_filepath = os.path.join(DataWarehouse.ENCRYPTED_DEFAULT_QUERY_RESULTS_LOCATION, file_name)
+    vm_query_results_filepath = os.path.join(DataWarehouseRemote.VM_DEFAULT_QUERY_RESULTS_LOCATION, file_name)
+    encrypted_query_results_filepath = os.path.join(DataWarehouseRemote.ENCRYPTED_DEFAULT_QUERY_RESULTS_LOCATION, file_name)
     query_results_df.to_parquet(vm_query_results_filepath, index=False)
 
     # Write query results to encrypted drive

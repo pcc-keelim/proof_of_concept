@@ -16,7 +16,7 @@ class DataWarehouseLocal():
 
 
     def __init__(self) -> None:
-        with open('secrets.yaml') as secrets:
+        with open('../secrets.yaml') as secrets:
             self.__secrets = yaml.safe_load(secrets)
 
     def execute_query(self, query_engine: str, query_string: str) -> pd.DataFrame:
