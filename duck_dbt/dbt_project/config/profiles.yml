@@ -4,3 +4,4 @@ dbt_project:
     local:
       type: duckdb
       path: 'warehouse.duckdb'
+      schema: dbt_schema

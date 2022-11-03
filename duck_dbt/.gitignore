@@ -5,3 +5,4 @@
 **.ipynb
 **.parquet
 **/logs
+**/dbt_packages

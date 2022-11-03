@@ -11,18 +11,17 @@ metrics:
     model: ref('inter_ce_fact')
     description: "The count of visits to a hospital on the network"
     calculation_method: count
-    expression: "p_v.id"
-    timestamp: "p_v.created_on"
+    expression: "patient_visit_id"
+    timestamp: "cevm_created_on"
     time_grains: [day, week]
     dimensions:
-      - "ce.facility_id"
-      - "ce.patient_id"
-      - "p_v.major_class"
-      - "ce.type"
+      - "facility_id"
+      - "patient_id"
+      - "type"
     filters:
-      - field: "ce.deleted_on"
+      - field: "deleted_on"
         operator: 'IS NOT'
         value:  'NULL'
-      - field: "p_v.deleted_on"
+      - field: "cevm_deleted_on"
         operator: 'IS NOT'
         value: 'NULL'

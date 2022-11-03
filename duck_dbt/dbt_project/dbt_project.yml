@@ -17,17 +17,16 @@ clean-targets:
   - "dbt_packages"
 
 # On run load parquet files into duckdb
-on-run-start: "{{ create_external_tables(this) }}"
-# After run create parquet files from new models
-on-run-end: "{{ export_tables_to_parquet(this) }}"
+# on-run-start: "{{ create_external_tables(this) }}"
+# # After run create parquet files from new models
+# on-run-end: "{{ export_tables_to_parquet(this) }}"
 
 models:
   dbt_project:
   # Make all staging models tables, by default is a view
-    staging:
+    cleaned:
       +materialized: table
-  # intermediate:
-  #   +materialized: table
-  # marts:
-  #   +materialized: table
-
+    intermediate:
+      +materialized: table
+    marts:
+      +materialized: table
