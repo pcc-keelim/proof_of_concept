@@ -10,8 +10,13 @@ class DataWarehouse():
     """
 
     DUCKDB_FILE_LOCATION = '/data/DataWarehouse.duckdb'
+    VM_DEFAULT_QUERY_RESULTS_LOCATION = '/data/temp/query_results'
+    ENCRYPTED_DEFAULT_QUERY_RESULTS_LOCATION = '/data/temp/query_results'
 
     def __init__(self) -> None:
+        """
+        Initialize duckdb and get secrets
+        """
         if not os.path.isfile(DataWarehouse.DUCKDB_FILE_LOCATION):
             DataWarehouse.__init_duckdb()
 
@@ -44,9 +49,9 @@ class DataWarehouse():
             con.execute(f"CREATE VIEW {table_name} AS SELECT * FROM '{table_dir}/*.parquet'")
 
     @staticmethod
-    def execute_query(query:str) -> pd.DataFrame:
+    def execute_query(query_string:str) -> pd.DataFrame:
         """
         """
         con = duckdb.connect(database=DataWarehouse.DUCKDB_FILE_LOCATION, read_only=True)
-        results: list = con.execute(query).df()
+        results: list = con.execute(query_string).df()
         return results

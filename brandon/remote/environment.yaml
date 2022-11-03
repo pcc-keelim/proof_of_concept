@@ -1,0 +1,14 @@
+name: null
+
+channels:
+ - https://nexus.dev.collectivemedicaltech.com/repository/conda-proxy/pkgs/main
+
+dependencies:
+ - python=3.9
+ - pip=20
+ - pip:
+    - duckdb
+    - fastapi
+    - "uvicorn[standard]"
+    - pandas
+
