@@ -5,7 +5,7 @@ import yaml
 
 from fastapi import FastAPI
 
-from data_warehouse import DataWarehouse
+from brandon.remote.data_warehouse_remote import DataWarehouse
 from smbclient import encrypted_drive
 
 

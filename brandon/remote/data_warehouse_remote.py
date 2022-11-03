@@ -2,7 +2,7 @@ import duckdb
 import pandas as pd
 import os
 
-class DataWarehouse():
+class DataWarehouseRemote():
     """
     This class wraps duckdb and allows for:
         * initialization of the database if it does not already exist
@@ -17,17 +17,17 @@ class DataWarehouse():
         """
         Initialize duckdb and get secrets
         """
-        if not os.path.isfile(DataWarehouse.DUCKDB_FILE_LOCATION):
-            DataWarehouse.__init_duckdb()
+        if not os.path.isfile(DataWarehouseRemote.DUCKDB_FILE_LOCATION):
+            DataWarehouseRemote.__init_duckdb()
 
     @staticmethod
     def __init_duckdb() -> None:
         """
         """
         # Establish the duckdb file
-        con = duckdb.connect(database=DataWarehouse.DUCKDB_FILE_LOCATION, read_only=False)
+        con = duckdb.connect(database=DataWarehouseRemote.DUCKDB_FILE_LOCATION, read_only=False)
         # Create all necessary tables
-        DataWarehouse.__create_tables(con)
+        DataWarehouseRemote.__create_tables(con)
 
     @staticmethod
     def __create_tables(con:duckdb.DuckDBPyConnection) -> None:
@@ -52,6 +52,6 @@ class DataWarehouse():
     def execute_query(query_string:str) -> pd.DataFrame:
         """
         """
-        con = duckdb.connect(database=DataWarehouse.DUCKDB_FILE_LOCATION, read_only=True)
+        con = duckdb.connect(database=DataWarehouseRemote.DUCKDB_FILE_LOCATION, read_only=True)
         results: list = con.execute(query_string).df()
         return results
