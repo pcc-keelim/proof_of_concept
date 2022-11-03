@@ -2,6 +2,7 @@ import os
 from datetime import datetime
 from enum import Enum
 import yaml
+from pathlib import Path
 
 from fastapi import FastAPI
 
@@ -29,7 +30,8 @@ class QueryEngine(str, Enum):
 def execute_query(query_engine: QueryEngine, query_string: str):
 
     # Get credentials
-    with open('../secrets.yaml') as secrets:
+    cwd = Path(__file__).parent.resolve()
+    with open(f'{cwd}/secrets.yaml') as secrets:
         secrets = yaml.safe_load(secrets)
 
     # Determine query engine

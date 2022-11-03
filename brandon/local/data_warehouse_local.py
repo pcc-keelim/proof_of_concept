@@ -5,6 +5,7 @@ import yaml
 import pandas as pd
 import time
 import os
+from pathlib import Path
 
 class DataWarehouseLocal():
     """
@@ -16,7 +17,8 @@ class DataWarehouseLocal():
 
 
     def __init__(self) -> None:
-        with open('../secrets.yaml') as secrets:
+        cwd = Path(__file__).parent.resolve()
+        with open(f'{cwd}/secrets.yaml') as secrets:
             self.__secrets = yaml.safe_load(secrets)
 
     def execute_query(self, query_engine: str, query_string: str) -> pd.DataFrame:
@@ -28,13 +30,15 @@ class DataWarehouseLocal():
             * fast api stores query results at default locations on both vm and encrypted drive
             * query results filepaths returned here
         """
+        # Prepare query for url insert
+        query_string = urllib.parse.quote(query_string)
 
         with SSHTunnelForwarder(
             ssh_address_or_host=self.__remote_host,
-            ssh_username=self.__secrets['credentials']['ssh_username'],
-            ssh_password=self.__secrets['credentials']['ssh_password'],
+            ssh_username=self.__secrets['ssh_credentials']['username'],
+            ssh_password=self.__secrets['ssh_credentials']['password'],
             ssh_pkey=self.__ssh_pkey,
-            ssh_private_key_password=self.__secrets['credentials']['ssh_key_password'],
+            ssh_private_key_password=self.__secrets['ssh_credentials']['key_password'],
             remote_bind_address=(self.__remote_bind_address,self.__remote_bind_port)
         )as server:
             response = requests.get(f'http://{self.__remote_bind_address}:{self.__remote_bind_port}/submit_query/{query_engine}/{query_string}').json()
