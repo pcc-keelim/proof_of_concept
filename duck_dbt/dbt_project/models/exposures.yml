@@ -1,0 +1,14 @@
+version: 2
+
+exposures:
+
+  - name: monthly_encounter_metrics
+    type: dashboard
+    maturity: high
+    url: https://del-tableau-01.int.collectivemedicaltech.com/#/views/HealthPlanTopLevelMetrics/TopLevelMetrics
+    description: "Lot of fun insights on encounters"
+    depends_on:
+      - ref('inter_ce_fact')
+    owner:
+      name: Shad
+      email: shad.carlson@collectivemedical.com

@@ -7,6 +7,9 @@ models:
      - name: id
        description: "Unique id for each facility"
        data_type: "int"
+       tests:
+         - unique
+         - not_null
      - name: name
        description: "The name of the facility. This name is not standerdized."
        data_type: "str"
@@ -25,6 +28,10 @@ models:
      - name: facility_id
        description: "The facility the encounter occured at"
        data_type: "int"
+       tests:
+         - relationships:
+             to: ref('facility_cleaned')
+             field: id
      - name: created_on
        description: "When we initially recieved the encounter information"
        data_type: "datetime"
