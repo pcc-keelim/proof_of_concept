@@ -1,3 +1,4 @@
 data/
 *.duckdb
 env/
+**/secrets.yaml
