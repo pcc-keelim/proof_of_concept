@@ -1,15 +1,22 @@
 name: null
 
-channels: 
- - https://nexus.dev.collectivemedicaltech.com/repository/conda-proxy/pkgs/main
+channels:
+   - https://nexus.dev.collectivemedicaltech.com/repository/conda-proxy/pkgs/main
 
 dependencies:
- - python=3.9
- - pip=20
- - pip:
-    - duckdb
-    - Faker
-    - pandas
-    - notebook
-    - jupyter
- 
+   - python=3.9
+   - pip=20
+   - pip:
+        - duckdb
+        - dask[complete]
+        - dask-sql
+        - bokeh
+      #   - dask-sql-server
+        - Faker
+        - pandas
+        - notebook
+        - jupyter
+        - fastapi[all]
+        - pyarrow
+        - sqlalchemy
+        - pyhive
