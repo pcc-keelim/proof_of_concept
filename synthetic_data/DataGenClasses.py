@@ -116,6 +116,7 @@ class FacilityDataClass(DataClassDF):
         self.county = self.location[2]
         self.country = self.location[3]
         self.state = self.location[4].split("/")[1]
+        del self.location
 
 @dataclass
 class ComprehensiveEncounterDataClass(DataClassDF):
