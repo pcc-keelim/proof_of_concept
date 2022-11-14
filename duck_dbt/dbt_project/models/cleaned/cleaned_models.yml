@@ -1,0 +1,76 @@
+version: 2
+
+models:
+ - name: facility_cleaned
+   description: "Cleaned version of facility extract"
+   columns:
+     - name: id
+       description: "Unique id for each facility"
+       data_type: "int"
+       tests:
+         - unique
+         - not_null
+     - name: name
+       description: "The name of the facility. This name is not standerdized."
+       data_type: "str"
+     - name: state
+       description: "The state that the facility is located."
+       data_type: "int"
+     - name: join_date
+       description: "The date that the facility joined the network."
+       data_type: "datetime"
+ - name: ce_cleaned
+   description: "Cleaned version of the comprehensive encounter extract"
+   columns:
+     - name: id
+       description: "The unique id of the encounter"
+       data_type: "str"
+     - name: facility_id
+       description: "The facility the encounter occured at"
+       data_type: "int"
+       tests:
+         - relationships:
+             to: ref('facility_cleaned')
+             field: id
+     - name: created_on
+       description: "When we initially recieved the encounter information"
+       data_type: "datetime"
+     - name: deleted_on
+       description: "When the encounter was deleted, may be null"
+       data_type: "datetime"
+     - name: admit_date
+       description: "When the patient was admited to the facility"
+       data_type: "datetime"
+     - name: discharge_date
+       description: "When the patient is discharged from the facility"
+       data_type: "datetime"
+     - name: type
+       description: "The type of encounter, such as emergency, inpatient, etc.."
+       data_type: "str"
+     - name: patient_id
+       description: "The unique identefier for the patient treated in the encounter"
+       data_type: "str"
+ - name: ce_visit_map_cleaned
+   description: "Cleaned version of the ce visit map extract"
+   columns:
+     - name: id
+       description: "The unique id of the visit map"
+       data_type: "str"
+     - name: comprehensive_encounter_id
+       description: "The unique id of the comprehensive_encounter"
+       data_type: "str"
+     - name: patient_visit_id
+       description: "The unique id of the patient visit"
+       data_type: "str"
+     - name: deleted_on
+       description: "The date the mapping was deleted"
+       data_type: "datetime"
+     - name: created_on
+       description: "The date the mapping was created"
+       data_type: "datetime"
+     - name: patient_id
+       description: "The unique id of the patient associated with the encounter and visit"
+       data_type: "str"
+     - name: is_sensitive
+       description: "If the encounter is sensitive"
+       data_type: "bool"

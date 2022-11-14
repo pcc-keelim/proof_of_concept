@@ -1,6 +1,0 @@
-version: 2
-
-models:
-  - name: facility_visits
-    description: "A count of visits by facility and major class"
-    meta: {'to_parquet': true}

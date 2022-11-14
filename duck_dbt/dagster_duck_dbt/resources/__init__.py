@@ -1,0 +1,2 @@
+from .duckdb_parquet_io_manager import duckdb_parquet_io_manager
+from .parquet_io_manager import local_parquet_io_manager

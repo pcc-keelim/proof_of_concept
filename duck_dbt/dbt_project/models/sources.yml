@@ -1,36 +1,10 @@
 version: 2
 
+# The sources needed to create each dbt model. In this case we are using parquet files
 sources:
- - name: parquet
+ - name: extracts
    tables:
-    - name: facility
-      external:
-        location: '/data/00_extract/facility/facility.parquet'
-    - name: facility_config
-      external:
-        location: '/data/00_extract/facility_config/facility_config.parquet'
-    - name: ce_visit_map
-      external:
-        location: '/data/00_extract/ce/comprehensive_encounter_visit_map/comprehensive_encounter_visit_map_2022-10-1*.parquet'
-    - name: comprehensive_encounter
-      external:
-        location: '/data/00_extract/ce/comprehensive_encounter/comprehensive_encounter_2022-10-1*.parquet'
-    - name: patient_visit
-      external:
-        location: '/data/00_extract/ce/patient_visit/patient_visit_2022-10-1*.parquet'
-    - name: patient_visit_details
-      external:
-        location: '/data/00_extract/ce/patient_visit_details/patient_visit_details_2022-10-1*.parquet'
-    # - name: patient_visit_insurance
-    #   external:
-    #     location: '/data/00_extract/ce/patient_visit_insurance/patient_visit_insurance_2022-10-*.parquet'
-    # - name: patient_insurance
-    #   external:
-    #     location: '/data/00_extract/ce/patient_insurance/patient_insurance_2022-10-*.parquet'
-    # - name: patient_visit_pds_care_provider
-    #   external:
-    #     location: '/data/00_extract/ce/patient_visit_pds_care_provider/patient_visit_pds_care_provider_2022-10-*.parquet'
-    # - name: patient_diagnosis
-    #   external:
-    #     location: '/data/00_extract/ce/patient_diagnosis/patient_diagnosis_2022-10-*.parquet'
+     - name: facility
+     - name: comprehensive_encounter
+     - name: ce_visit_map
     

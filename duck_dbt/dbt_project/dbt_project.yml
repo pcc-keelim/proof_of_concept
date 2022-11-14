@@ -1,7 +1,9 @@
+# This is the main project settings file
 name: "dbt_project"
 version: "1.0.0"
 config-version: 2
 
+# Profile to use, can be switched like prod/dev
 profile: "dbt_project"
 
 analysis-paths: ["analyses"]
@@ -14,15 +16,17 @@ clean-targets:
   - "target"
   - "dbt_packages"
 
-on-run-start: "{{ create_external_tables(this) }}"
-on-run-end: "{{ export_tables_to_parquet(this) }}"
+# On run load parquet files into duckdb
+# on-run-start: "{{ create_external_tables(this) }}"
+# # After run create parquet files from new models
+# on-run-end: "{{ export_tables_to_parquet(this) }}"
 
 models:
   dbt_project:
-    staging:
+  # Make all staging models tables, by default is a view
+    cleaned:
       +materialized: table
-  # intermediate:
-  #   +materialized: table
-  # marts:
-  #   +materialized: table
-
+    intermediate:
+      +materialized: table
+    marts:
+      +materialized: table
