@@ -1,0 +1,101 @@
+version: 2
+
+sources:
+  - name: gdb
+    tables:
+      - name: patient_visit
+        meta:
+          external_location: parquet_scan('{{ var("ce_path")}}/{name}/{name}_{{ var("date_regex")}}.parquet')
+      - name: comprehensive_encounter
+        meta:
+          external_location: parquet_scan('{{ var("ce_path")}}/{name}/{name}_{{ var("date_regex")}}.parquet')
+      - name: comprehensive_encounter_visit_map
+        meta:
+          external_location: parquet_scan('{{ var("ce_path")}}/{name}/{name}_{{ var("date_regex")}}.parquet')
+      - name: patient_address
+        meta:
+          external_location: parquet_scan('{{ var("ce_path")}}/{name}/{name}_{{ var("date_regex")}}.parquet')
+      - name: patient_description
+        meta:
+          external_location: parquet_scan('{{ var("ce_path")}}/{name}/{name}_{{ var("date_regex")}}.parquet')
+      - name: patient_diagnosis
+        meta:
+          external_location: parquet_scan('{{ var("ce_path")}}/{name}/{name}_{{ var("date_regex")}}.parquet')
+      - name: patient_disability
+        meta:
+          external_location: parquet_scan('{{ var("ce_path")}}/{name}/{name}_{{ var("date_regex")}}.parquet')
+      - name: patient_email
+        meta:
+          external_location: parquet_scan('{{ var("ce_path")}}/{name}/{name}_{{ var("date_regex")}}.parquet')
+      - name: patient_ethnicity
+        meta:
+          external_location: parquet_scan('{{ var("ce_path")}}/{name}/{name}_{{ var("date_regex")}}.parquet')
+      - name: patient_ident
+        meta:
+          external_location: parquet_scan('{{ var("ce_path")}}/{name}/{name}_{{ var("date_regex")}}.parquet')
+      - name: patient_insurance
+        meta:
+          external_location: parquet_scan('{{ var("ce_path")}}/{name}/{name}_{{ var("date_regex")}}.parquet')
+      - name: patient_language
+        meta:
+          external_location: parquet_scan('{{ var("ce_path")}}/{name}/{name}_{{ var("date_regex")}}.parquet')
+      - name: patient_marital_status
+        meta:
+          external_location: parquet_scan('{{ var("ce_path")}}/{name}/{name}_{{ var("date_regex")}}.parquet')
+      - name: patient_name
+        meta:
+          external_location: parquet_scan('{{ var("ce_path")}}/{name}/{name}_{{ var("date_regex")}}.parquet')
+      - name: patient_phone
+        meta:
+          external_location: parquet_scan('{{ var("ce_path")}}/{name}/{name}_{{ var("date_regex")}}.parquet')
+      - name: patient_race
+        meta:
+          external_location: parquet_scan('{{ var("ce_path")}}/{name}/{name}_{{ var("date_regex")}}.parquet')
+      - name: patient_visit_details
+        meta:
+          external_location: parquet_scan('{{ var("ce_path")}}/{name}/{name}_{{ var("date_regex")}}.parquet')
+      - name: patient_visit_insurance
+        meta:
+          external_location: parquet_scan('{{ var("ce_path")}}/{name}/{name}_{{ var("date_regex")}}.parquet')
+      - name: patient_visit_pds_care_provider
+        meta:
+          external_location: parquet_scan('{{ var("ce_path")}}/{name}/{name}_{{ var("date_regex")}}.parquet')
+      - name: data_source
+        meta:
+          external_location: parquet_scan('{{ var("extract_path") }}/{name}/{name}.parquet')
+      - name: dx_code
+        meta:
+          external_location: parquet_scan('{{ var("extract_path") }}/{name}/{name}.parquet')
+      - name: facility
+        meta:
+          external_location: parquet_scan('{{ var("extract_path") }}/{name}/{name}.parquet')
+      - name: facility_config
+        meta:
+          external_location: parquet_scan('{{ var("extract_path") }}/{name}/{name}.parquet')
+      - name: facility_identifier
+        meta:
+          external_location: parquet_scan('{{ var("extract_path") }}/{name}/{name}.parquet')
+      - name: hl7_mapping
+        meta:
+          external_location: parquet_scan('{{ var("extract_path") }}/{name}/{name}.parquet')
+      - name: hl7_template
+        meta:
+          external_location: parquet_scan('{{ var("extract_path") }}/{name}/{name}.parquet')
+      - name: insight
+        meta:
+          external_location: parquet_scan('{{ var("extract_path") }}/{name}/{name}.parquet')
+      - name: notif_destination
+        meta:
+          external_location: parquet_scan('{{ var("extract_path") }}/{name}/{name}.parquet')
+      - name: patient_care_guideline
+        meta:
+          external_location: parquet_scan('{{ var("extract_path") }}/{name}/{name}.parquet')
+      - name: patient_care_history
+        meta:
+          external_location: parquet_scan('{{ var("extract_path") }}/{name}/{name}.parquet')
+      - name: patient_housing_insecurity
+        meta:
+          external_location: parquet_scan('{{ var("extract_path") }}/{name}/{name}.parquet')
+      - name: patient_security_event
+        meta:
+          external_location: parquet_scan('{{ var("extract_path") }}/{name}/{name}.parquet')

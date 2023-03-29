@@ -1,0 +1,15 @@
+version: 2
+
+exposures:
+  - name: realy_important_dashboard
+    type: dashboard
+    maturity: low
+    description: >
+      Very important to hospitals
+
+    depends_on:
+      - ref('report01')
+    
+    owner:
+      name: Bill Gates
+      email: Bill.Gates@pointclickcare.com

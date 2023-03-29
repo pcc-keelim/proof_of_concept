@@ -10,5 +10,5 @@ exposures:
     depends_on:
       - ref('inter_ce_fact')
     owner:
-      name: Shad
-      email: shad.carlson@collectivemedical.com
+      name: Marc
+      email: marc.keeling@pointclickcare.com
