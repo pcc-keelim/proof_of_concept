@@ -266,24 +266,6 @@ services:
     depends_on:
       - webapp
       - server
-  # the following is commented out because I could not get it to work as desired
-  # octavia-cli:
-  #   image: airbyte/octavia-cli:0.1.0
-  #   # command: apply --force
-  #   # command: '--help'
-  #   # command: 'init'
-  #   # command: '--airbyte-url'
-  #   command: list
-  #   # command: octavia init
-  #   # command: create --help
-  #   env_file:
-  #     - ./.octavia # Use a local env file to store variables that will be mapped the octavia-cli container
-  #   volumes:
-  #     - ./octavia_project:/home/octavia-project
-  #   # depends_on:
-  #     # - webapp 
-  ## This is how I would run the above 'octavia-cli' in plain docker
-  # docker run -i --rm -v \$(pwd):/home/octavia-project --network host --env-file .\octavia/.octavia --user \$(id -u):\$(id -g) airbyte/octavia-cli:0.1.0"'  >> ${DETECTED_PROFILE}
   clickhouse_server:
       # https://hub.docker.com/r/altinity/clickhouse-server/tags?page=1&name=stable
       image: altinity/clickhouse-server:22.8.15.25.altinitystable
@@ -293,8 +275,22 @@ services:
       - 8443:8443
       volumes:
       - ./clickhouse_database:/var/lib/clickhouse
+      - ./clickhouse-server:/etc/clickhouse-server
+      - ./ch_init:/docker-entrypoint-initdb.d/
       networks:
           - clickhouse_network
+  # mysql_db:
+  #   image: mysql:5.7
+  #   restart: always
+  #   environment:
+  #     MYSQL_ROOT_PASSWORD: password
+  #     MYSQL_DATABASE: mydb
+  #     MYSQL_USER: user
+  #     MYSQL_PASSWORD: password
+  #     MYSQL_LOG_BIN: ON
+  #   ports:
+  #     - "3306:3306"
+
 
 volumes:
   workspace:
