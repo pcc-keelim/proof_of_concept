@@ -1,0 +1,22 @@
+version: '3'
+services:
+  clickhouse_server:
+    image: altinity/clickhouse-server:22.8.15.25.altinitystable
+    ports:
+      - "8443:8443"
+      - "9440:9440"
+    volumes:
+      - ./clickhouse_database:/var/lib/clickhouse
+      - ./clickhouse-server:/etc/clickhouse-server
+      - ./ch_init:/docker-entrypoint-initdb.d/
+      - ./clickhouse_logs:/var/log/clickhouse-server/
+      # Below may need to change to the default location of the certs on the server
+      - ./certs:/etc/custom_certs/
+    environment:
+      - TZ=America/Denver
+      # UID of clickhouse user on host machine
+      # cat /etc/passwd | grep clickhouse
+      # -> clickhouse:x:<UID>:<GID>::/nonexistent:/bin/false
+      - CLICKHOUSE_UID=997
+      # GID of clichouse group on host machine
+      - CLICKHOUSE_GID=998
