@@ -9,4 +9,4 @@ CREATE DATABASE IF NOT EXISTS dev_jdoe;
 --     home_id String
 -- ) 
 -- ENGINE = MergeTree AS SELECT 1;
-GRANT SELECT, INSERT, ALTER, CREATE ON dev_jdoe.* TO fred;
+GRANT SELECT, INSERT, ALTER, CREATE ON dev_jdoe.* TO jdoe;

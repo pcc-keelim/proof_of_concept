@@ -1,13 +1,15 @@
 version: '3'
 services:
   clickhouse_server:
-    image: altinity/clickhouse-server:22.8.15.25.altinitystable
+    image: clickhouse/clickhouse-server:23.5.3.24 #Stable
     ports:
+      - "8123:8123"
       - "8443:8443"
       - "9440:9440"
     volumes:
       - ./clickhouse_database:/var/lib/clickhouse
-      - ./clickhouse-server:/etc/clickhouse-server
+      - ./clickhouse-server/config.d:/etc/clickhouse-server/config.d
+      - ./clickhouse-server/users.d:/etc/clickhouse-server/users.d
       - ./ch_init:/docker-entrypoint-initdb.d/
       - ./clickhouse_logs:/var/log/clickhouse-server/
       # Below may need to change to the default location of the certs on the server
