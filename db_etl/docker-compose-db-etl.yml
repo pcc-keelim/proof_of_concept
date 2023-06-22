@@ -267,30 +267,30 @@ services:
       - webapp
       - server
   clickhouse_server:
-      # https://hub.docker.com/r/altinity/clickhouse-server/tags?page=1&name=stable
-      image: altinity/clickhouse-server:22.8.15.25.altinitystable
-      ports:
-      - 8123:8123
-      # access by going to http://localhost:8123/play
-      - 8443:8443
-      volumes:
+    image: clickhouse/clickhouse-server:23.5.3.24 #Stable
+    ports:
+      - "8443:8443"
+      - "9440:9440"
+    volumes:
       - ./clickhouse_database:/var/lib/clickhouse
-      - ./clickhouse-server:/etc/clickhouse-server
+      - ./clickhouse-server/config.d:/etc/clickhouse-server/config.d
+      - ./clickhouse-server/users.d:/etc/clickhouse-server/users.d
       - ./ch_init:/docker-entrypoint-initdb.d/
-      networks:
-          - clickhouse_network
-  # mysql_db:
-  #   image: mysql:5.7
-  #   restart: always
-  #   environment:
-  #     MYSQL_ROOT_PASSWORD: password
-  #     MYSQL_DATABASE: mydb
-  #     MYSQL_USER: user
-  #     MYSQL_PASSWORD: password
-  #     MYSQL_LOG_BIN: ON
-  #   ports:
-  #     - "3306:3306"
-
+      - ./clickhouse_logs:/var/log/clickhouse-server/
+      # Below may need to change to the default location of the certs on the server
+      - /etc/clickhouse-server/certs/dc2-ds-db-01*:/etc/custom_certs/
+      - /etc/ssl/ca/cmt-ca-chain.pem:/etc/custom_certs/cmt-ca-chain.pem
+    environment:
+      - TZ=America/Denver
+      # UID of clickhouse user on host machine
+      # cat /etc/passwd | grep clickhouse
+      # -> clickhouse:x:<UID>:<GID>::/nonexistent:/bin/false
+      - CLICKHOUSE_UID=997
+      # GID of clichouse group on host machine
+      - CLICKHOUSE_GID=998
+    networks:
+        - clickhouse_network
+        - airbyte_internal
 
 volumes:
   workspace:
