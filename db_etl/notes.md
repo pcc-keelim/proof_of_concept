@@ -48,13 +48,13 @@ https://docs.altinity.com/operationsguide/security/clickhouse-hardening-guide/
 
 
 Deployemnt process best practice
-
-1. Build container locally
-2. Export Container (will need container name)
-    - Example: `docker export clickhouse-clickhouse_server-1 > experiment626.tar`
-3. scp experiment626.tar to the server
-    - Example: `scp C:\Users\keelim\Documents\dev\clickhouse\experiment626.tar dc2-ds-db-01.int.collectivemedicaltech.com:~/`
-4. docker import the file
-    - Example: `cat experiment626.tar | docker import - clickhouse_server:latest`
-5. start the image
-    - Example: ``
+<!-- This is supposed to work better -->
+https://github.com/gongbell/ContractFuzzer/issues/5 
+1: Export Image (will need image name)
+  - Example: `docker save -o altinity/clickhouse-server clickhouse-server.tar`
+2: scp clickhouse-server.tar to the server
+  - Example: `scp C:\Users\keelim\Documents\dev\clickhouse\clickhouse-server.tar dc2-ds-db-01.int.collectivemedicaltech.com:~/`
+3: docker import the file
+  - Example: `docker load -i clickhouse-server.tar`
+4: Build the container with the docker-compose file
+  - Example: ``
