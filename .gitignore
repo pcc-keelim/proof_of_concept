@@ -2,3 +2,9 @@ data/
 *.duckdb
 **/env/
 **/secrets.yaml
+**/db_etl/clickhouse_database/
+**/clickhouse_database/
+**/clickhouse_logs/
+**/archive/
+**/certs/
+**/db_etl/mysql/
