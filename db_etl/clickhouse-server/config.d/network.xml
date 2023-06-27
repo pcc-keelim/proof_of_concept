@@ -8,4 +8,10 @@
     <!-- <tcp_port_secure>9440</tcp_port_secure> -->
     <!-- Disable PostgreSQL emulation port --> 
     <postgresql_port remove="true"/>
+
+    <!-- For 'Connection: keep-alive' in HTTP 1.1 -->
+    <keep_alive_timeout>20</keep_alive_timeout>
+
+    <!-- Default session timeout, in seconds. Default: 60. -->
+    <default_session_timeout>180</default_session_timeout>
 </clickhouse>

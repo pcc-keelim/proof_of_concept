@@ -269,8 +269,8 @@ services:
   clickhouse_server:
     image: clickhouse/clickhouse-server:23.5.3.24 #Stable
     ports:
-      - "8443:8443"
-      - "9440:9440"
+      - 8443:8443
+      - 9440:9440
     volumes:
       - ./clickhouse_database:/var/lib/clickhouse
       - ./clickhouse-server/config.d:/etc/clickhouse-server/config.d
