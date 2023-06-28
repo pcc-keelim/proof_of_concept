@@ -272,7 +272,7 @@ services:
       - 8443:8443
       - 9440:9440
     volumes:
-      - ./clickhouse_database:/var/lib/clickhouse
+      - /data/ch_db:/var/lib/clickhouse
       - ./clickhouse-server/config.d:/etc/clickhouse-server/config.d
       - ./clickhouse-server/users.d:/etc/clickhouse-server/users.d
       - ./ch_init:/docker-entrypoint-initdb.d/
@@ -307,7 +307,28 @@ configs:
     file: ./flags.yml
 networks:
   airbyte_public:
+    name: airbyte_public
+    driver: bridge
+    external: false
+    ipam:
+      config:
+        - subnet: 10.11.6.0/24
+          gateway: 10.11.6.1
   airbyte_internal:
+    name: airbyte_internal
+    driver: bridge
+    external: false
+    ipam:
+      config:
+        - subnet: 10.11.5.0/24
+          gateway: 10.11.5.1
   clickhouse_network:
+    name: clickhouse_network
+    driver: bridge
+    external: true
+    ipam:
+      config:
+        - subnet: 10.11.7.0/24
+          gateway: 10.11.7.1
 
 # Need an image for install dagster and getting it set up and running
