@@ -58,3 +58,21 @@ https://github.com/gongbell/ContractFuzzer/issues/5
   - Example: `docker load -i clickhouse-server.tar`
 4: Build the container with the docker-compose file
   - Example: ``
+
+  
+
+  Make sure that the docker demon network is modified so that it does not use the incorrect subnet and lock up the server communication. [see this article](https://medium.com/@jacob.swanson.n/making-docker-use-different-ip-ranges-on-ubuntu-27ba6cbb825d)
+  
+  Create the following file 
+  `/etc/docker/daemon.json`
+  ``` json
+  {
+  "bip": "10.10.0.5/24",
+  "default-address-pools": [
+    {
+      "base": "10.11.0.0/16",
+      "size": 24
+    }
+  ]
+}
+```
