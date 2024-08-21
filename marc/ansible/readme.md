@@ -14,3 +14,7 @@ eval "$(ssh-agent -s)"
 ssh-add ~/.ssh/id_rsa 
 ```
 
+command to install extensions
+```bash
+code --install-extension extensions.txt
+```
