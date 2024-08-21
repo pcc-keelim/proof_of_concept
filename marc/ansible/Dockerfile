@@ -5,11 +5,11 @@ FROM ubuntu:latest
 ENV DEBIAN_FRONTEND=noninteractive  
   
 # Update the system and install necessary packages  
-RUN apt-get update -y && \  
-    apt-get upgrade -y && \  
-    apt-get install -y git software-properties-common ssh ansible sudo bash-completion && \  
-    rm -rf /var/lib/apt/lists/*  
-  
+RUN apt-get update -y && \
+    apt-get upgrade -y && \
+    apt-get install -y git software-properties-common ssh ansible sudo bash-completion curl && \
+    apt-get clean
+
 # Set the default user name      
 ARG myusername=default_user 
 
@@ -25,13 +25,13 @@ COPY ./.ssh /home/${myusername}/.ssh/
 # Correct permissions of .ssh directory    
 RUN chown -R ${myusername}: /home/${myusername}/.ssh && \
     chmod 700 /home/${myusername}/.ssh && \
-    chmod 600 /home/${myusername}/.ssh/*
-    
+    chmod 600 /home/${myusername}/.ssh/* 
+
 # Switch to the new user    
 USER ${myusername}    
     
 # Set the work directory    
-WORKDIR /home/${myusername}    
+WORKDIR /home/${myusername}
   
 # Revert back to the normal user  
 ENV DEBIAN_FRONTEND=  
