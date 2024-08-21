@@ -1,0 +1,13 @@
+ms-kubernetes-tools.vscode-kubernetes-tools
+ms-azuretools.vscode-docker
+ms-vscode-remote.remote-containers
+ms-python.python
+mtxr.sqltools
+mechatroner.rainbow-csv
+redhat.vscode-yaml
+ms-python.pylint
+ms-python.debugpy
+eamodio.gitlens
+GitHub.copilot-chat
+Gruntfuggly.todo-tree
+streetsidesoftware.code-spell-checker
