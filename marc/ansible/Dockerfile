@@ -7,7 +7,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Update the system and install necessary packages  
 RUN apt-get update -y && \  
     apt-get upgrade -y && \  
-    apt-get install -y git software-properties-common ssh ansible sudo && \  
+    apt-get install -y git software-properties-common ssh ansible sudo bash-completion && \  
     rm -rf /var/lib/apt/lists/*  
   
 # Set the default user name      
