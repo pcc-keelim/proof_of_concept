@@ -1,0 +1,47 @@
+# Get ubuntu image
+FROM ubuntu:latest
+
+# Set environment variables
+ENV ANSIBLE_HOST_KEY_CHECKING=False
+
+# Update the system and install necessary packages
+RUN apt-get update -y && \
+    apt-get upgrade -y && \
+    apt-get install -y git software-properties-common ssh sshpass ansible sudo bash bash-completion curl python3 python3-pip && \
+    apt-add-repository --yes --update ppa:ansible/ansible && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Set up Ansible hosts
+RUN mkdir -p /etc/ansible && \
+    echo '[servers]' > /etc/ansible/hosts && \
+    echo 'server1 ansible_host=10.0.0.3' >> /etc/ansible/hosts && \
+    echo 'server2 ansible_host=10.0.0.4' >> /etc/ansible/hosts && \
+    echo 'server3 ansible_host=10.0.0.5' >> /etc/ansible/hosts && \
+    echo 'server4 ansible_host=10.0.0.6' >> /etc/ansible/hosts
+
+# create a new user
+RUN useradd -ms /bin/bash ansible
+
+# Add ansible user to sudoers
+RUN echo "ansible ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+
+# Switch to ansible user
+USER ansible
+
+# Set working directory
+WORKDIR /home/ansible
+
+# Clone kubespray
+RUN git clone https://github.com/kubernetes-incubator/kubespray.git
+WORKDIR /home/ansible/kubespray
+# RUN pip install -r requirements.txt
+
+# Set the default shell to bash
+SHELL ["/bin/bash", "-c"]
+
+# Set working directory
+WORKDIR /home/ansible/kubespray
+
+# Command to keep the container running
+CMD sleep infinity

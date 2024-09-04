@@ -1,0 +1,18 @@
+# Using Ubuntu as the base image
+FROM ubuntu:latest
+
+# Install SSH
+RUN apt-get update && \
+    apt-get install -y ssh && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Set root password
+RUN echo 'root:root_password' | chpasswd
+
+# Configure SSH to allow root login with password
+RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
+
+# Start SSH service and keep the container running
+CMD service ssh start && sleep infinity

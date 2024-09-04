@@ -1,3 +1,5 @@
+This folder is designed to set up a docker container from which to run ansible against the future infrastructure. 
+
 set user name to same as on server 
 
 

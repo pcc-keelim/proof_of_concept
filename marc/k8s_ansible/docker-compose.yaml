@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+  ansible-node:
+    build:
+      context: .
+      dockerfile: Dockerfile.ansible
+    container_name: ansible-node
+    networks:
+      internal_network:
+        ipv4_address: 10.0.0.2
+  control-node:
+    build:
+      context: .
+      dockerfile: Dockerfile.controlnode
+    container_name: control-node
+    networks:
+      internal_network:
+        ipv4_address: 10.0.0.3
+    hostname: control-node
+    # volumes:
+      # - ./control_node_ansible:/root/.ssh
+      # - ./control_node_ansible_code:/root/ansible_code
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1GB
+
+  server1:
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    container_name: server1
+    networks:
+      internal_network:
+        ipv4_address: 10.0.0.4
+    hostname: server1
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1GB
+
+  server2:
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    container_name: server2
+    networks:
+      internal_network:
+        ipv4_address: 10.0.0.5
+    hostname: server2
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1GB
+
+  server3:
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    container_name: server3
+    networks:
+      internal_network:
+        ipv4_address: 10.0.0.6
+    hostname: server3
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1GB
+
+networks:
+  internal_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.0.0.0/24
