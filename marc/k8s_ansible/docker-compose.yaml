@@ -1,11 +1,12 @@
-version: '3.8'
-
 services:
   ansible-node:
     build:
       context: .
       dockerfile: Dockerfile.ansible
     container_name: ansible-node
+    volumes:
+      - ./custom_hosts:/etc/hosts
+      - ./inventory:/home/ansible/inventory
     networks:
       internal_network:
         ipv4_address: 10.0.0.2
@@ -18,8 +19,8 @@ services:
       internal_network:
         ipv4_address: 10.0.0.3
     hostname: control-node
-    # volumes:
-      # - ./control_node_ansible:/root/.ssh
+    volumes:
+      - ./custom_hosts:/etc/hosts
       # - ./control_node_ansible_code:/root/ansible_code
     deploy:
       resources:
@@ -36,6 +37,8 @@ services:
       internal_network:
         ipv4_address: 10.0.0.4
     hostname: server1
+    volumes:
+      - ./custom_hosts:/etc/hosts
     deploy:
       resources:
         limits:
@@ -51,6 +54,8 @@ services:
       internal_network:
         ipv4_address: 10.0.0.5
     hostname: server2
+    volumes:
+      - ./custom_hosts:/etc/hosts
     deploy:
       resources:
         limits:
@@ -66,6 +71,8 @@ services:
       internal_network:
         ipv4_address: 10.0.0.6
     hostname: server3
+    volumes:
+      - ./custom_hosts:/etc/hosts
     deploy:
       resources:
         limits:

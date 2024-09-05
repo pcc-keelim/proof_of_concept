@@ -6,12 +6,28 @@ ENV ANSIBLE_HOST_KEY_CHECKING=False
 
 # Install necessary packages
 RUN apt-get update && \
-    apt-get install -y software-properties-common ssh sshpass && \
+    apt-get install -y \
+    software-properties-common \
+    ssh \
+    sshpass \
+    openssh-server && \
     apt-add-repository --yes --update ppa:ansible/ansible && \
-    apt-get update && \
     apt-get install -y ansible && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
+
+# Set root password
+RUN echo 'root:password' | chpasswd
+
+# Configure SSH to allow root login with password
+RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
+
+# Create ansible and grant sudo privileges
+RUN useradd -m ansible && \
+    echo 'ansible:password' | chpasswd && \
+    usermod -aG sudo ansible && \
+    echo 'ansible ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
 # Set up Ansible hosts
 RUN echo '[servers]' > /etc/ansible/hosts && \
@@ -19,5 +35,5 @@ RUN echo '[servers]' > /etc/ansible/hosts && \
     echo 'server2 ansible_host=10.0.0.4' >> /etc/ansible/hosts && \
     echo 'server3 ansible_host=10.0.0.5' >> /etc/ansible/hosts
 
-# Command to keep the container running
-CMD sleep infinity
+# Start SSH service and keep the container running
+CMD service ssh start && sleep infinity
