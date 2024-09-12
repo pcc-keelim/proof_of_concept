@@ -8,35 +8,36 @@ services:
       - ./custom_hosts:/etc/hosts
       - ./inventory:/home/ansible/inventory
     networks:
-      internal_network:
+      cluster_internal_network:
         ipv4_address: 10.0.0.2
+        
   control-node:
     build:
       context: .
       dockerfile: Dockerfile.controlnode
     container_name: control-node
-    networks:
-      internal_network:
-        ipv4_address: 10.0.0.3
     hostname: control-node
+    networks:
+      cluster_internal_network:
+        ipv4_address: 10.0.0.3
     volumes:
       - ./custom_hosts:/etc/hosts
       # - ./control_node_ansible_code:/root/ansible_code
     deploy:
       resources:
         limits:
-          cpus: '1'
-          memory: 1GB
+          cpus: '2'
+          memory: 2GB
 
   server1:
     build:
       context: .
       dockerfile: Dockerfile.server
     container_name: server1
-    networks:
-      internal_network:
-        ipv4_address: 10.0.0.4
     hostname: server1
+    networks:
+      cluster_internal_network:
+        ipv4_address: 10.0.0.4
     volumes:
       - ./custom_hosts:/etc/hosts
     deploy:
@@ -50,10 +51,10 @@ services:
       context: .
       dockerfile: Dockerfile.server
     container_name: server2
-    networks:
-      internal_network:
-        ipv4_address: 10.0.0.5
     hostname: server2
+    networks:
+      cluster_internal_network:
+        ipv4_address: 10.0.0.5
     volumes:
       - ./custom_hosts:/etc/hosts
     deploy:
@@ -67,10 +68,10 @@ services:
       context: .
       dockerfile: Dockerfile.server
     container_name: server3
-    networks:
-      internal_network:
-        ipv4_address: 10.0.0.6
     hostname: server3
+    networks:
+      cluster_internal_network:
+        ipv4_address: 10.0.0.6
     volumes:
       - ./custom_hosts:/etc/hosts
     deploy:
@@ -80,7 +81,7 @@ services:
           memory: 1GB
 
 networks:
-  internal_network:
+  cluster_internal_network:
     driver: bridge
     ipam:
       config:

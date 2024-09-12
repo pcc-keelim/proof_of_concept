@@ -7,6 +7,7 @@ ENV ANSIBLE_HOST_KEY_CHECKING=False
 # Install necessary packages
 RUN apt-get update && \
     apt-get install -y \
+    sudo \
     software-properties-common \
     ssh \
     sshpass \
@@ -29,11 +30,8 @@ RUN useradd -m ansible && \
     usermod -aG sudo ansible && \
     echo 'ansible ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
-# Set up Ansible hosts
-RUN echo '[servers]' > /etc/ansible/hosts && \
-    echo 'server1 ansible_host=10.0.0.3' >> /etc/ansible/hosts && \
-    echo 'server2 ansible_host=10.0.0.4' >> /etc/ansible/hosts && \
-    echo 'server3 ansible_host=10.0.0.5' >> /etc/ansible/hosts
+# Set permissions on sudoers file to avoid potential issues
+# RUN chmod 0440 /etc/sudoers.d/ansible
 
 # Start SSH service and keep the container running
 CMD service ssh start && sleep infinity

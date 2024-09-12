@@ -1,3 +1,4 @@
+10.0.0.2 ansible-node
 10.0.0.3 control-node
 10.0.0.4 server1
 10.0.0.5 server2

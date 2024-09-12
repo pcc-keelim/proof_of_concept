@@ -10,6 +10,8 @@ install requirements in venv and create some files
 
 ```bash
 cd /home/ansible/kubespray
+su ansible
+bash
 python3 -m venv venv
 source ./venv/bin/activate
 pip3 install ruamel.yaml
@@ -20,7 +22,7 @@ Now, for each server we need to create an ansible user and establish ssh connect
 On the ansible container run this command to generate the ssh key
 
 ```bash
-  ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519 -q -N ""
+ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519 -q -N ""
 ```
 Explanation-
 - `ssh-keygen` This is the command used to generate, manage, and convert authentication keys for SSH (Secure Shell).
@@ -32,7 +34,15 @@ Explanation-
 Next we need to create a password that we will use to automate the ssh password entry and copy the ssh public keys to the remote servers
 ```bash
 touch password.txt
-echo ansible_pass1! > password.txt
+echo password > password.txt
+
+```
+shh into the servers with a password  and accept fingerprint then exit
+```bash
+sshpass -f password.txt ssh -o StrictHostKeyChecking=no ansible@control-node exit
+sshpass -f password.txt ssh -o StrictHostKeyChecking=no ansible@server1 exit
+sshpass -f password.txt ssh -o StrictHostKeyChecking=no ansible@server2 exit
+sshpass -f password.txt ssh -o StrictHostKeyChecking=no ansible@server3 exit
 ```
 
 then for each server we need to copy over the public key
@@ -41,13 +51,6 @@ sshpass -f password.txt ssh-copy-id -i ~/.ssh/id_ed25519.pub ansible@control-nod
 sshpass -f password.txt ssh-copy-id -i ~/.ssh/id_ed25519.pub ansible@server1
 sshpass -f password.txt ssh-copy-id -i ~/.ssh/id_ed25519.pub ansible@server2
 sshpass -f password.txt ssh-copy-id -i ~/.ssh/id_ed25519.pub ansible@server3
-```
-shh into the servers with a password  and accept fingerprint then exit
-```bash
-sshpass -f password.txt ssh -o StrictHostKeyChecking=no ansible@control-node exit
-sshpass -f password.txt ssh -o StrictHostKeyChecking=no ansible@server1 exit
-sshpass -f password.txt ssh -o StrictHostKeyChecking=no ansible@server2 exit
-sshpass -f password.txt ssh -o StrictHostKeyChecking=no ansible@server3 exit
 ```
 
 # cluster-variable.yaml
@@ -116,5 +119,30 @@ all:
 ```
 
 ```bash
-ansible-playbook -i inventory/proxmox01/hosts.yaml -e @inventory/proxmox01/cluster-variable.yaml --become --become-user=root -u ansible cluster.yml
+ansible-playbook -i inventory/mycluster/inventory -e @inventory/mycluster/cluster-variable.yaml --become --become-user=root -u ansible cluster.yml
+ansible-playbook -i inventory/mycluster/inventory -b -v --private-key=/home/ansible/.ssh/id_ed25519
+```
+
+Creates this error:
+```
+TASK [kubespray-defaults : Create fallback_ips_base] **************************************************************************************************************************************************
+fatal: [control-node -> localhost]: FAILED! => {"msg": "The task includes an option with an undefined variable. The error was: 'None' has no attribute 'get'. 'None' has no attribute 'get'\n\nThe error appears to be in '/home/ansible/kubespray/roles/kubespray-defaults/tasks/fallback_ips.yml': line 18, column 3, but may\nbe elsewhere in the file depending on the exact syntax problem.\n\nThe offending line appears to be:\n\n\n- name: Create fallback_ips_base\n  ^ here\n"}
+```
+
+from this task
+```yaml
+- name: Create fallback_ips_base
+  set_fact:
+    fallback_ips_base: |
+      ---
+      {% set search_hosts = (ansible_play_hosts_all + [groups['kube_control_plane'][0]]) | unique if ansible_limit is defined else (groups['k8s_cluster'] | default([]) + groups['etcd'] | default([]) + groups['calico_rr'] | default([])) | unique %}
+      {% for item in search_hosts %}
+      {% set found = hostvars[item].get('ansible_default_ipv4') %}
+      {{ item }}: "{{ found.get('address', '127.0.0.1') }}"
+      {% endfor %}
+  delegate_to: localhost
+  connection: local
+  delegate_facts: true
+  become: false
+  run_once: true
 ```
