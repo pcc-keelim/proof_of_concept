@@ -1,0 +1,58 @@
+# Usage:
+# To run this playbook and pass in the variables file, use the following command:
+# ansible-playbook -i inventory.yaml transfer_images_playbook.yml -e "@vars/my_vars.yaml"
+# NOTE: this playbook loads vars from a yaml file, which is passed via the -e flag
+
+- name: Pull, export, compress, and upload images on control node to remote server
+  hosts: localhost
+  gather_facts: no
+  vars:
+    sanitized_images: "{{ docker_images | map('replace', '/', '_') | list }}" # this is to avoid path issues
+  tasks:
+    - name: Pull Docker images
+      command: > # The > symbol is a YAML syntax for a folded block scalar, which allows you to write multi-line strings in a more readable way.
+        docker pull {{ item }}
+      with_items: "{{ docker_images }}"
+
+    - name: Export Docker images to tar with sanitized names
+      command: >
+        docker save -o /tmp/{{ item.1 }}.tar {{ item.0 }}
+      with_together:
+        - "{{ docker_images }}"
+        - "{{ sanitized_images }}"
+      args:
+        creates: "/tmp/{{ item.1 }}.tar"
+
+    - name: Compress tar files
+      command: >
+        gzip /tmp/{{ item }}.tar
+      with_items: "{{ sanitized_images }}"
+      args:
+        creates: "/tmp/{{ item }}.tar.gz"
+
+    - name: Upload compressed tar files to remote server
+      copy:
+        src: "/tmp/{{ item }}.tar.gz"
+        dest: "{{ remote_path }}/{{ item }}.tar.gz"
+        force: false # Overwrites files if they already exist
+      with_items: "{{ sanitized_images }}"
+      delegate_to: "{{ remote_server }}"
+
+- name: Unzip and load Docker images on remote server
+  hosts: "{{ remote_server }}"
+  gather_facts: no
+  vars:
+    sanitized_images: "{{ docker_images | map('replace', '/', '_') | list }}"
+  tasks:
+    - name: Unzip tar files
+      command: >
+        gunzip {{ remote_path }}/{{ item }}.tar.gz
+      with_items: "{{ sanitized_images }}"
+      args:
+        creates: "{{ remote_path }}/{{ item }}.tar"
+
+    - name: Load Docker images
+      command: >
+        docker load -i {{ remote_path }}/{{ item }}.tar
+      with_items: "{{ sanitized_images }}"
+      changed_when: false

@@ -1,0 +1,2 @@
+# ping hosts
+    ansible -u brandon.butler myhosts -m ping -i inventory.yaml
