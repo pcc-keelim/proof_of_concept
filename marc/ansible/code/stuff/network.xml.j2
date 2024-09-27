@@ -1,0 +1,23 @@
+<clickhouse>
+    <!-- disable http and enable https port -->
+    <!-- <http_port remove="true">8123</http_port> -->
+    <http_port>8123</http_port>
+    <https_port>8443</https_port>
+    <!-- for native protocal communication of dbt -->
+    <tcp_port_secure>9440</tcp_port_secure>
+
+    <!-- enable https inter-server port -->
+    <interserver_http_port remove="true">9009</interserver_http_port>
+    <interserver_https_port>9010</interserver_https_port>
+    <!-- Enable MySQL emulation port -->
+    <mysql_port>9004</mysql_port>
+
+    <!-- Disable PostgreSQL emulation port --> 
+    <postgresql_port remove="true"/>
+
+    <!-- For 'Connection: keep-alive' in HTTP 1.1 -->
+    <keep_alive_timeout>20</keep_alive_timeout>
+
+    <!-- Default session timeout, in seconds. Default: 60. -->
+    <default_session_timeout>180</default_session_timeout>
+</clickhouse>

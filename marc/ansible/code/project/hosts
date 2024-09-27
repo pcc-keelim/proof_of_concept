@@ -1,2 +1,2 @@
-[all]  
-dc2-ds-etl-01.int.collectivemedicaltech.com ansible_host=192.168.53.194  
+[all]
+dc2-ds-etl-01.int.collectivemedicaltech.com

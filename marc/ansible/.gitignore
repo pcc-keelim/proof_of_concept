@@ -1,3 +1,5 @@
 .ssh/
 .env
 output.txt
+ansible-env/
+temp/

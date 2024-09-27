@@ -1,0 +1,239 @@
+- name: Copy configuration file to Docker container on remote server
+  hosts: all
+  become: true
+  gather_facts: false
+  collections:
+    - community.docker
+    - community.general
+    - community.crypto
+  vars:
+    cluster_name: replicated_cluster
+    remote_server_hostname: remote.host.name
+    container_name: clickhouse-container
+    clickhouse_image: clickhouse/clickhouse-server:23.10.5.20
+    clickhouse_user: 'your_clickhouse_username'
+    clickhouse_password: 'your_clickhouse_password'
+    config_d_folder: /etc/clickhouse-server/config.d
+    owner: clickhouse
+    user: clickhouse
+    group: clickhouse
+    local_temp_folder: /tmp/ansible_temp_files
+    config_files:
+      # - { name: 'cluster.xml', src: '/home/marckeelingiv/dev/proof_of_concept/marc/ansible/code/stuff/cluster.xml.j2' }
+      - { name: 'network.xml', src: '/home/marckeelingiv/dev/proof_of_concept/marc/ansible/code/stuff/network.xml.j2' }
+      - { name: 'docker_related_config.xml', src: '/home/marckeelingiv/dev/proof_of_concept/marc/ansible/code/stuff/docker_related_config.xml.j2' }
+      - { name: 'other_db_customizations.xml', src: '/home/marckeelingiv/dev/proof_of_concept/marc/ansible/code/stuff/other_db_customizations.xml.j2' }
+      - { name: 'ssl.xml', src: '/home/marckeelingiv/dev/proof_of_concept/marc/ansible/code/stuff/ssl.xml.j2' }
+    local_dockerfile_src: '/home/marckeelingiv/dev/proof_of_concept/marc/ansible/code/stuff/Dockerfile.clickhouse'
+    container_cert_folder: /etc/custom_certs
+  
+    ssl_cert_common_name: 'your.common.name'  # Replace with your desired CN
+    ssl_cert_country: 'US'
+    ssl_cert_state: 'Utah'
+    ssl_cert_locality: 'SaltLakeCity'
+    ssl_cert_organization: 'PointClickCare'
+    ssl_cert_organizational_unit: 'DataEngineering'
+    ssl_cert_email: 'marc.keeling@pointclickcare.com'
+    ssl_cert_validity_days: 730
+    ssl_cert_key_size: 2048
+
+  tasks:
+    - name: Prepare local environment
+      block:
+        - name: Ensure the local temporary directory exists
+          file:
+            path: "{{ local_temp_folder }}"
+            state: directory
+          delegate_to: localhost
+          become: false
+
+        # - name: Clean up temporary if they exists
+        #   file:
+        #     path: "{{ local_temp_folder }}/{{ item.name }}"
+        #     state: absent
+        #   loop: "{{ config_files }}"
+        #   delegate_to: localhost
+        #   become: false
+        #   ignore_errors: true
+
+        - name: Create temporary files from templates on localhost
+          template:
+            src: "{{ item.src }}"
+            dest: "{{ local_temp_folder }}/{{ item.name }}"
+            force: true
+          loop: "{{ config_files }}"
+          delegate_to: localhost
+          become: false
+
+      tags: [local_setup]
+    
+    - name: Generate an unencrypted private key
+      community.crypto.openssl_privatekey:
+        path: "{{ local_temp_folder }}/{{ ssl_cert_common_name }}.key.pem"
+        size: "{{ ssl_cert_key_size }}"
+        type: RSA
+        cipher: null  # Ensure the key is unencrypted
+      delegate_to: localhost
+      become: false
+      tags: [ssl_management]
+
+    - name: Generate a Certificate Signing Request (CSR)
+      community.crypto.openssl_certificate:
+        path: "{{ local_temp_folder }}/{{ ssl_cert_common_name }}.cert.pem"
+        privatekey_path: "{{ local_temp_folder }}/{{ ssl_cert_common_name }}.key.pem"
+        provider: selfsigned
+        common_name: "{{ ssl_cert_common_name }}"
+        country_name: "{{ ssl_cert_country }}"
+        state_or_province_name: "{{ ssl_cert_state }}"
+        locality_name: "{{ ssl_cert_locality }}"
+        organization_name: "{{ ssl_cert_organization }}"
+        organizational_unit_name: "{{ ssl_cert_organizational_unit }}"
+        email_address: "{{ ssl_cert_email }}"
+        valid_days: "{{ ssl_cert_validity_days }}"
+      delegate_to: localhost
+      become: false
+      tags: [ssl_management]
+
+    - name: Copy SSL certificates and keys to the remote server
+      copy:
+        src: "{{ local_temp_folder }}/{{ item }}"
+        dest: /gdw/certs/
+        owner: clickhouse
+        group: clickhouse
+        mode: '0640'
+      loop:
+        - "{{ ssl_cert_common_name }}.cert.pem"
+        - "{{ ssl_cert_common_name }}.key.pem"
+      tags: [certificate_management]
+
+    - name: Setup target directory on remote server
+      file:
+        path: "{{ config_d_folder}}"
+        state: directory
+        owner: "{{ owner }}"
+        group: "{{ group }}"
+        mode: '0755'
+      tags: [remote_setup]
+
+    - name: Copy configuration files to remote server
+      copy:
+        src: "{{ local_temp_folder }}/{{ item.name }}"
+        dest: "{{ config_d_folder}}/{{ item.name }}"
+        force: true  #make sure this is an actual 
+      loop: "{{ config_files }}"
+      become: true
+      tags: [file_transfer]
+
+    - name: Change ownership of the configuration files
+      file:
+        path: "{{ config_d_folder}}/{{ item.name }}"
+        state: file
+        owner: "{{ owner }}"
+        group: "{{ group }}"
+        mode: '0644'
+      loop: "{{ config_files }}"
+      become: true
+      tags: [file_transfer]
+
+    - name: Create directory for certificates on the remote server
+      file:
+        path: /gdw/certs
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+      become: true
+      tags: [certificate_management]
+
+    - name: Copy SSL certificates and keys to /gdw/certs
+      copy:
+        remote_src: true
+        src: "{{ item.src }}"
+        dest: /gdw/certs/
+      loop:
+        - { src: "/etc/ssl/dc2-ds-etl-01.int.collectivemedicaltech.com.cert.pem" }
+        - { src: "/etc/ssl/dc2-ds-etl-01.int.collectivemedicaltech.com.key.pem" }
+        - { src: "/etc/ssl/ca/cmt-ca-chain.pem" }
+      become: true
+      tags: [certificate_management]
+
+    - name: Change ownership of /gdw/certs directory to clickhouse
+      file:
+        path: /gdw/certs
+        state: directory
+        owner: clickhouse
+        group: clickhouse
+        recurse: true
+      become: true
+      tags: [certificate_management]
+
+    - name: Set permissions for files in /gdw/certs
+      file:
+        path: /gdw/certs/
+        state: directory
+        mode: '0644'
+        recurse: true
+      become: true
+      tags: [certificate_management]
+
+    - name: ensure docker container is removed
+      community.docker.docker_container:
+        name: "{{ container_name }}"
+        state: absent
+      become: true
+      ignore_errors: true
+      tags: [container_management]
+
+    - name: Manage ClickHouse Docker container
+      block:
+        - name: Run ClickHouse Docker container
+          community.docker.docker_container:
+            name: "{{ container_name }}"
+            image: "{{ clickhouse_image }}"
+            state: started
+            working_dir: /var/lib/clickhouse
+            # state: restarted # Changed from 'started' to 'restarted'
+            user: "clickhouse"
+            volumes:
+              - "{{ config_d_folder}}:{{ config_d_folder}}"   # Volume for configuration files
+              - "/gdw/certs:/etc/custom_certs"                # Volume for SSL certificates
+              - "/var/log/clickhouse:/var/log/clickhouse"     # Volume for logs
+            env:
+              CLICKHOUSE_UID: "997"
+              CLICKHOUSE_GID: "998"
+            ports:
+              - "8123:8123"  # HTTP
+              - "8443:8443"  # Secure HTTP
+              - "9440:9440"  # Secure TCP
+              - "9010:9010"  # Inter-server HTTPS
+              - "9004:9004"  # MySQL emulation
+      become: true
+      tags: [container_management]
+
+    - name: Verify SSL certificates inside the Docker container
+      command: "docker exec {{ container_name }} ls -l {{ container_cert_folder }}"
+      register: result_certificates
+      changed_when: false
+      tags: [container_verification]
+
+    - name: Display verification results for SSL certificates
+      debug:
+        msg: "SSL Certificates copied successfully: {{ result_certificates.stdout }}"
+      tags: [container_verification]
+
+    - name: Verify the configuration files in the Docker container
+      command: "docker exec {{ container_name }} ls -l /etc/clickhouse/config.d/{{ item.name }}"
+      loop: "{{ config_files }}"
+      register: result_files
+      changed_when: false
+      tags: [container_verification]
+
+    - name: Display verification results for configuration files
+      debug:
+        msg: "File copied successfully: {{ item.name }} - {{ item.result.stdout }}"
+      loop: "{{ result_files.results }}"
+      loop_control:
+        loop_var: item
+      tags: [container_verification]
+
+# docker cp clickhouse-container:/var/log/clickhouse-server/clickhouse-server.err.log /tmp/clickhouse-server.err.log
