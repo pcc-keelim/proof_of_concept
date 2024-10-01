@@ -6,20 +6,29 @@ concat_files() {
   # Empty the output file if it already exists  
   > "$output_file"  
   
-  for file in "$@"; do  
-    if [[ -f "$file" ]]; then  # Check if the file exists
-      echo "Processing $file"  
-      echo "$file" >> "$output_file"  
-      cat "$file" >> "$output_file"  
+  for path in "$@"; do  
+    if [[ -f "$path" ]]; then  # Check if the path is a file
+      echo "Processing $path"  
+      echo "$path" >> "$output_file"  
+      cat "$path" >> "$output_file"  
       echo "<<<----END OF FILE---->>>" >> "$output_file"
       echo "" >> "$output_file"
+    elif [[ -d "$path" ]]; then  # Check if the path is a directory
+      echo "Processing directory $path"
+      find "$path" -type f | while read -r file; do
+        echo "Processing $file"
+        echo "$file" >> "$output_file"
+        cat "$file" >> "$output_file"
+        echo "<<<----END OF FILE---->>>" >> "$output_file"
+        echo "" >> "$output_file"
+      done
     else
-      echo "Warning: $file does not exist."  # Warn if the file doesn't exist
+      echo "Warning: $path does not exist."  # Warn if the path doesn't exist
     fi
   done  
     
   echo "Concatenation done. Output: $output_file"  
 }  
 
-# Call the function with a list of files passed as arguments
+# Call the function with a list of files and/or directories passed as arguments
 concat_files "$@"
