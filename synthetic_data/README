@@ -1,5 +1,0 @@
-This folder contains the code needed to create fake data that is similar in distribution to that observed in production 
-
-To generate the data just run `parquet_file_gen.ipynb'.`
-
-It will generate the needed data in the `data/` folder and then create a file called `database.duckdb` which will contain views pointing to the fake data generated. 

@@ -1,2 +1,0 @@
-load_from:
-  - python_package: duck_dbt.dagster_duck_dbt
