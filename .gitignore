@@ -1,7 +1,10 @@
 data/
 *.duckdb
 **/env/
+**/venv/
+secrets
 **/secrets.yaml
+**/profiles.yml
 **/db_etl/clickhouse_database/
 **/clickhouse_database/
 **/clickhouse_logs/
