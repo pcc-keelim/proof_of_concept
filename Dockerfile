@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -y \
     gnupg \
     curl \
     telnetd \
+    dos2unix \
     openssh-client 
 
 # Register the Microsoft Ubuntu repository
@@ -36,8 +37,14 @@ WORKDIR /code/ds-reporting-logic
 RUN pip install -e .
 WORKDIR /code/ds-reporting-scheduling
 RUN pip install -e .
+
+# dbt setup
 WORKDIR /code/ds-reporting-logic/src/dbt_datascience
 RUN dbt deps
+# RUN dbt compile
+WORKDIR /code/ds-reporting-logic/src/dbt_etl
+RUN dbt deps
+
 
 
 # # Install vscode server
@@ -54,8 +61,11 @@ EXPOSE 3000
 
 # Copy setup.sh over to the container
 COPY ./setup.sh /setup.sh
+RUN dos2unix /setup.sh
 
 # Start dagster dev server
-# CMD ["tail", "-f", "/dev/null"]
+
 WORKDIR /code/ds-reporting-scheduling
-CMD ["dagster", "dev"]
+COPY .env /code/ds-reporting-scheduling/.env
+# CMD ["dagster", "dev"]
+CMD ["tail", "-f", "/dev/null"]
