@@ -11,3 +11,5 @@ secrets
 **/archive/
 **/certs/
 **/db_etl/mysql/
+ds-reporting-logic/
+ds-reporting-scheduling/

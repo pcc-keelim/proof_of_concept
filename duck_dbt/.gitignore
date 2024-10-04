@@ -1,8 +1,0 @@
-**/env
-**/__pycache__
-**/target
-**.duckdb
-**.ipynb
-**.parquet
-**/logs
-**/dbt_packages
