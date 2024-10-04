@@ -1,55 +1,103 @@
-# Setup ssh (only for WSL, skip if not)
+# Usage
+## Regular usage
 
-### Install needed linux packages
-```bash
-sudo apt-get install keychain openssh-client
-```
+Come back to this if it's your first time.
 
-### Configure ~/.ssh folder
+Remember, docker desktop must be running for containers to work
 
-Can simply copy an existing .ssh folder from windows or linux
+No need to activate any python environments in the container, it is always active. If you have packages you want added, please create a ticker for DE
 
-### Configure ~/.profile
+##      
 
-Add the following to your ~/.profile at the bottom:
+### Starting and stopping the container
 
-```bash
-# load keychain
-eval $(keychain --quiet --eval --agents ssh id_rsa)
+First you should note that you have two options, starting and stopping, or building and destroying
 
-# start ssh-agent
-if [ -z "$SSH_AUTH_SOCK" ]; then
-    eval $(ssh-agent -s)
-    ssh-add ~/.ssh/id_rsa
-fi
-```
+For starting and stopping, any changes you make should be saved in the container
 
-At this point, whenever a wsl session is opened, the ssh-agent should be started and your key should be loaded
+- To stop the container
+    - Open vscode and navigate to the docker extension tab on the far left
+    - find the container under the containers dropdown, it should be called "ds_dev_image:latest" or something similar and have a green triangle indicating it is running
+    - right click it and select stop
+- To start the container
+    - Open vscode and navigate to the docker extension tab on the far left
+    - find the container under the containers dropdown, it should be called "ds_dev_image:latest" or something similar and have a red square indicating it is stopped
+    - right click it and select start
+    - wait for the green triangle to appear again, indicating it is running
+    - then right click again and select "Attach Visual Studio Code"
 
-# Setup credentials
+If you destroy the container, everything will be gone. This may be useful if you break it
+- To destroy the container
+    - Open vscode and navigate to the docker extension tab on the far left
+    - find the container under the containers dropdown, it should be called "ds_dev_image:latest" or something similar
+    - right click it and select remove
+- To rebuild the container Follow the steps under getting started below
+##      
+### Transferring files in and out of the container
 
-Create a folder named "secrets" at the top level of this repository, at the same level as this readme.
+There is a shared folder between your computer, and the container.
+- On the container it is /windows_shared/
+- On your computer it is in your home folder and called dockershare (ie "C:\Users\doej\dockershare")
 
-Copy the "~/secrets/secrets.yaml" and "~/.dbt/profiles.yaml" into this folder
+Anything you put in one, will appear in the other. You cannot move the folders.
 
-# Setup ds-reporting-logic and ds-reporting-scheduling
+In the docker container, to move something from whatever folder the terminal is in, to the shared folder, use the following command:
 
-### create a venv, install ansible, and run the ansible playbook to clone repositories as siblings to this repository
+`cp . /windows_shared/`
 
-```bash
-python -m venv ./venv
-source ./venv/bin/activate
-pip install ansible
-ansible-playbook ansible_setup_dev_env.yaml
-```
+Or, if it is in another location
 
-# Create the dev container, and attach vscode to it
+`cp /path/to/file /windows_shared/`
 
-Press F1, and select "Dev Containers: Reopen in container"
+You can then find the file 
+"C:\Users\doej\dockershare"
 
-This will create the container, and also do the following:
-* installs customizable vscode settings such as extensions, found in devcontainer.json
-* run setup.sh, which installs the repos as python packages, runs dbt compile, and configures git for use
-* run startup.sh, which starts dagster dev on port 3000
+Reverse the process for moving something to the container.
+## Getting started
+1. Ensure docker desktop is running
+    - Simply open the application and ensure in the bottom left it says 'Engine running'
+2. Run the startup.sh script
+    - open a bash terminal (either git bash or wsl) in the directory the script and .tar file are in
+    - run `bash startup.sh`
+    - this moves files and starts the container and creates a volume
+    - the container is now running
+3. Attach vscode to the container
+    - Open vscode and navigate to the docker extension tab on the far left
+    - find the container under the containers dropdown, it should be called "ds_dev_image:latest" or something similar and have a green triangle indicating it is running
+    - right click it and select "Attach Visual Studio Code"
+    - A new window of visual studio code will launch
+4. Run the setup script
+    - Press <cntrl + ~> to open a terminal
+    - run `bash /setup.sh'
+    - follow the prompts
+    - this will set up dbt on reporting logic and move some files around, should take no more than 5 minutes
+5. Open a folder
+    - Either click the button that says open folder or find it under File > Open Folder
+    - Generally you will want to open /code/ds-reporting-logic
+    - If you need to see where other files are in the container, open /
 
+ 
+##      
+# Requirements
 
+## Files
+For this to work as intended, in your home folder (ie "C:\Users\doej") you must have the following directories and files
+
+- directory
+    - file
+- .ssh
+    - id_rsa
+    - known_hosts
+- .ssl
+    - CMT_Root_CA.pem
+    - CMT-CA-CHAIN.crt
+- .dbt
+    - profiles.yml
+- secrets
+    - secrets.yaml
+it's ok if there are more files in those directories, they just need those at minimum
+## Software
+Additionally you will need the following:
+- Docker Desktop, and an account
+- Vscode 
+    - With the docker extension
