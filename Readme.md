@@ -30,18 +30,10 @@ At this point, whenever a wsl session is opened, the ssh-agent should be started
 
 Create a folder named "secrets" at the top level of this repository, at the same level as this readme.
 
-Copy the "~/secrets/secrets.yaml" and "~/.dbt/profiles.yaml" into this folder
+Copy "~/secrets/secrets.yaml", "~/.dbt/profiles.yaml", and CMT_Root_CA.pem into this folder
 
 # Setup ds-reporting-logic and ds-reporting-scheduling
 
-### create a venv, install ansible, and run the ansible playbook to clone repositories as siblings to this repository
-
-```bash
-python -m venv ./venv
-source ./venv/bin/activate
-pip install ansible
-ansible-playbook ansible_setup_dev_env.yaml
-```
 
 # Create the dev container, and attach vscode to it
 

@@ -20,6 +20,13 @@ RUN ACCEPT_EULA=Y apt-get install -y msodbcsql17
 # Verify if the MS SQL ODBC Driver is installed
 RUN odbcinst -q -d -n "ODBC Driver 17 for SQL Server"
 
+# Copy in certs
+COPY ./secrets/CMT_Root_CA.pem /etc/ssl/certs/CMT_Root_CA.pem
+
+# Copy in setup scripts
+COPY ./setup.sh /code/setup.sh
+COPY ./start.sh /code/start.sh
+
 # # Add non-root user
 # ARG USERNAME=nonroot
 # RUN groupadd --gid 1000 $USERNAME && useradd --uid 1000 --gid 1000 -m $USERNAME

@@ -21,9 +21,9 @@
         "source=${localWorkspaceFolder}/../ds-reporting-logic,target=/code/ds-reporting-logic,type=bind,consistency=cached",
         "source=${localWorkspaceFolder}/../ds-reporting-scheduling,target=/code/ds-reporting-scheduling,type=bind,consistency=cached",
         "source=${localWorkspaceFolder}/secrets/profiles.yml,target=/root/.dbt/profiles.yml,type=bind,consistency=cached",
-        "source=${localWorkspaceFolder}/secrets/secrets.yaml,target=/root/secrets/secrets.yaml,type=bind,consistency=cached",
-        "source=${localWorkspaceFolder}/.devcontainer/setup.sh,target=/code/setup.sh,type=bind,consistency=cached",
-        "source=${localWorkspaceFolder}/.devcontainer/start.sh,target=/code/start.sh,type=bind,consistency=cached"
+        "source=${localWorkspaceFolder}/secrets/secrets.yaml,target=/root/secrets/secrets.yaml,type=bind,consistency=cached"
+        // "source=${localWorkspaceFolder}/.devcontainer/setup.sh,target=/code/setup.sh,type=bind,consistency=cached",
+        // "source=${localWorkspaceFolder}/.devcontainer/start.sh,target=/code/start.sh,type=bind,consistency=cached"
     ],
     "workspaceFolder": "/code",
     "portsAttributes": {

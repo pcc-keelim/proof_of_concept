@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  devcontainer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ../ds-reporting-logic:/code/ds-reporting-logic
+      - ../ds-reporting-scheduling:/code/ds-reporting-scheduling
+      - ./secrets/profiles.yml:/root/.dbt/profiles.yml
+      - ./secrets/secrets.yaml:/root/secrets/secrets.yaml
+      - ./.devcontainer/setup.sh:/code/setup.sh
+      - ./.devcontainer/start.sh:/code/start.sh
+    entrypoint: /bin/bash -c "/scripts/setup.sh && /scripts/start.sh"
