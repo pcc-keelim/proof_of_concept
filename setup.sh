@@ -38,6 +38,18 @@ git config --global user.email $git_email
 git config --global --add safe.directory /code/ds-reporting-logic
 git config --global --add safe.directory /code/ds-reporting-scheduling
 
+# git fetch, checkout master and pull on both repos
+cd /code/ds-reporting-logic
+git fetch
+git checkout master
+git pull
+
+cd /code/ds-reporting-scheduling
+git fetch
+git checkout master
+git pull
+
+
 # run dbt setup
 cd  /code/ds-reporting-logic/src/dbt_datascience
 echo "running dbt debug"
