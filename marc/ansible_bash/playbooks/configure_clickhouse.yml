@@ -1,65 +1,124 @@
 ---
 - name: Configure ClickHouse on remote servers
-  hosts: control-node
+  hosts: [control-node]
+  gather_facts: false
   become: true
+
+  vars:
+    clickhouse_config_dir: "/etc/clickhouse-server/config.d"
+    clickhouse_container_name: "clickhouse-server"
+    docker_image: "clickhouse/clickhouse-server:23.10.5.20"
+    certs_dir: "/gdw/certs"
+    ssl_cert_common_name: "your_certificate_common_name"  # Example variable for certs
+    exposed_ports:
+      - "8123:8123"
+      - "8443:8443"
+      - "9440:9440"
+      - "9004:9004"
+      - "9010:9010"
+
   tasks:
     - name: Create configuration directory for ClickHouse
       file:
-        path: /etc/clickhouse-server/
+        path: "{{ clickhouse_config_dir }}"
         state: directory
         mode: '0755'
+      tags:
+        - clickhouse
+        - config
 
     - name: Upload cluster configuration
       template:
-        src: "roles/execute_script/files/assets/cluster.xml.j2"
-        dest: "/gdw/clickhouse-server/cluster.yml"
+        src: "../roles/execute_script/files/assets/network.xml.j2"
+        dest: "{{ clickhouse_config_dir }}/cluster.yml"
       vars:
-        cluster_name: "your_cluster_name"  # Ensure this variable is defined at the playbook or inventory/host_vars
-        remote_server_hostname: "your_remote_server_hostname"  # Replace or set in inventory/host_vars
+        cluster_name: "your_cluster_name"
+        remote_server_hostname: "your_remote_server_hostname"
+      tags:
+        - clickhouse
+        - config
+        - cluster
 
     - name: Upload additional ClickHouse configuration
       template:
-        src: "roles/execute_script/files/assets/config.xml.j2"
-        dest: "/etc/clickhouse-server/config.xml"
-      vars:
-        ssl_cert_common_name: "your_certificate_common_name"  # Ensure this variable is defined in the playbook or passed from inventory/host_vars
+        src: "../roles/execute_script/files/assets/docker_related_config.xml.j2"
+        dest: "{{ clickhouse_config_dir }}/docker_related_config.xml"
+      tags:
+        - clickhouse
+        - config
+        - docker
 
     - name: Copy SSL certificates to remote container
       copy:
-        src: "/gdw/custom_certs/{{ ssl_cert_common_name }}.cert.pem"
+        src: "{{ certs_dir }}/{{ ssl_cert_common_name }}.cert.pem"
         dest: "/etc/custom_certs/{{ ssl_cert_common_name }}.cert.pem"
+      tags:
+        - clickhouse
+        - ssl
+        - certs
+
+    - name: Set the owner and group of the config files and folder to clickhouse:clickhouse
+      file:
+        path: "{{ clickhouse_config_dir }}"
+        recurse: yes
+        owner: clickhouse
+        group: clickhouse
+        state: directory
+      tags:
+        - clickhouse
+        - config
 
     - name: Copy SSL private key to remote container
       copy:
-        src: "/gdw/custom_certs/{{ ssl_cert_common_name }}.key.pem"
+        src: "{{ certs_dir }}/{{ ssl_cert_common_name }}.key.pem"
         dest: "/etc/custom_certs/{{ ssl_cert_common_name }}.key.pem"
+      tags:
+        - clickhouse
+        - ssl
+        - certs
 
     - name: Ensure Docker container is running
-      command: docker ps --filter "name=clickhouse-server" --filter "status=running" --format '{{.Names}}'
+      command: docker ps --filter "name={{ clickhouse_container_name }}" --filter "status=running" --format '{{.Names}}'
       register: clickhouse_container_running
       changed_when: false
+      tags:
+        - clickhouse
+        - docker
+        - status
 
     - name: Stop and remove ClickHouse container if it's running
       shell: |
-        docker stop clickhouse-server && docker rm clickhouse-server
+        docker stop {{ clickhouse_container_name }} && docker rm {{ clickhouse_container_name }}
       when: clickhouse_container_running.stdout != ""
       ignore_errors: true
+      tags:
+        - clickhouse
+        - docker
+        - cleanup
 
     - name: Start the ClickHouse Docker container with volume mapping
       command: |
         docker run -d \
-        --name clickhouse-server \
+        --name {{ clickhouse_container_name }} \
         -v /gdw/certs:/etc/certs:ro \
         -v /gdw/clickhouse-server:/etc/clickhouse-server \
-        -p 8123:8123 \
-        -p 8443:8443 \
-        -p 9440:9440 \
-        -p 9004:9004 \
-        -p 9010:9010 \
-        clickhouse/clickhouse-server:23.10.5.20
+        {% for port in exposed_ports %}
+        -p {{ port }} \
+        {% endfor %} \
+        {{ docker_image }}
       when: clickhouse_container_running.stdout == ""
       register: clickhouse_container_restart
+      tags:
+        - clickhouse
+        - docker
+        - start
 
     - name: Restart ClickHouse container to apply changes
-      command: docker restart clickhouse-server
+      command: docker restart {{ clickhouse_container_name }}
       when: clickhouse_container_running.stdout != "" and clickhouse_container_restart.changed == false
+      tags:
+        - clickhouse
+        - docker
+        - restart
+
+# ansible-playbook playbooks/configure_clickhouse.yml --tags "config"
