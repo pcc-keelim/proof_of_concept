@@ -321,60 +321,6 @@ class ServerClientCertificate(CertificateBase):
         self._create_cert()
         self._save_cert_and_key(directory)
 
-
-# def main(): # pylint: disable=missing-function-docstring
-#     # Get the directory from the user
-#     ca_storage_path = input("Enter the directory to save/load the certificate and key (e.g., /etc/clickhouse-ca): ") # pylint: disable=line-too-long
-
-#     # if path already exists then load the ca
-#     if os.path.exists(ca_storage_path):
-#         ca = CertificateAuthority()
-#     else:
-#         # Prompt for passphrase or other encryption
-#         passphrase_option = input("Do you want to use a passphrase for the CA key? (yes/no): ").lower() # pylint: disable=line-too-long
-#         passphrase = getpass("Enter passphrase: ") if passphrase_option == "yes" else None
-#         encryption_type = input("Choose encryption type for private key (none or PKCS8, Default PKCS8): ").lower() or "PKCS8" # pylint: disable=line-too-long
-
-#         # Create the CA object
-#         ca = CertificateAuthority(
-#             key_size=4096,
-#             validity_years=10,
-#             country="US",
-#             state="Utah",
-#             org_name="pcc_data_engineering",
-#             passphrase=passphrase,
-#             encryption_type=encryption_type
-#         )
-#         ca.create_key()
-#         ca._create_cert()
-#         ca._save_cert_and_key(cert_path=ca_storage_path, key_path=ca_storage_path)
-
-
-#     # ask user if they would like to generate a server or client certificates?
-#     server_or_client = input("Would you like to generate a server or client certificate? (yes/no): ").lower() # pylint: disable=line-too-long
-#     if server_or_client == "yes":
-#         # Server or Client certificate options
-#         cert_type = input("Would you like to generate a server or client certificate? (server/client): ").lower() # pylint: disable=line-too-long
-#         cert_name = input(f"Enter the {cert_type} certificate name (default '{cert_type}.cert'): ") or f"{cert_type}_cert" # pylint: disable=line-too-long
-#         validity_days = int(input(f"Enter the validity period in days for the {cert_type} certificate (default 365): ") or "365") # pylint: disable=line-too-long
-#         org_name = input("Enter the organization name (default 'pcc_data_engineering'): ") or "pcc_data_engineering" # pylint: disable=line-too-long
-#         state = input("Enter the state (default 'Utah'): ") or "Utah"
-#         san_input = input("Enter a comma-separated list of SANs (e.g., domain.com, 192.168.1.1) or leave blank: ") # pylint: disable=line-too-long
-#         san_list = [san.strip() for san in san_input.split(',')] if san_input else None
-
-#         # Create server/client certificate
-#         cert = ServerClientCertificate(
-#             ca=ca,
-#             cert_type=cert_type,
-#             cert_name=cert_name,
-#             validity_days=validity_days,
-#             org_name=org_name,
-#             state=state,
-#             san_list=san_list
-#         )
-
-#         cert.generate_certificate(ca_storage_path)
-        
 # Assuming arguments will be passed via sys.argv
 def main():
     ca_storage_path = sys.argv[1]  # Path passed from Ansible playbook

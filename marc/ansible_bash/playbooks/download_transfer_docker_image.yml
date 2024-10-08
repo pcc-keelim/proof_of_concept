@@ -1,0 +1,39 @@
+---
+- name: Download, transfer and load Docker image if not present
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Check if ClickHouse Docker image exists
+      command: docker images -q clickhouse/clickhouse-server:23.10.5.20
+      register: image_exists
+      changed_when: false
+
+    - name: Check if tar file exists on remote server
+      stat:
+        path: /tmp/clickhouse-server.tar
+      register: tar_exists
+
+    - name: Pull ClickHouse Docker image
+      docker_image:
+        name: clickhouse/clickhouse-server
+        tag: 23.10.5.20
+        source: pull
+      delegate_to: localhost
+      when: image_exists.stdout == ""
+
+    - name: Save Docker image to a tar file
+      command: docker save -o /tmp/clickhouse-server.tar clickhouse/clickhouse-server:23.10.5.20
+      delegate_to: localhost
+      when: image_exists.stdout == ""
+
+    - name: Copy Docker image to remote server
+      copy:
+        src: /tmp/clickhouse-server.tar
+        dest: /tmp/clickhouse-server.tar
+      when: image_exists.stdout == "" and not tar_exists.stat.exists
+
+    - name: Load Docker image on remote server
+      command: docker load -i /tmp/clickhouse-server.tar
+      when: image_exists.stdout == "" and not tar_exists.stat.exists
+
+# ansible-playbook -i inventory/hosts playbooks/download_transfer_docker_image.yml

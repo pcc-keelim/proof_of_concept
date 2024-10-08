@@ -1,0 +1,11 @@
+---
+- name: Copy and execute Bash script on target hosts
+  hosts: all
+  become: true
+  vars:
+    script_name: "example_script.sh"
+    script_args: ""  # Optional, pass script parameters here.
+    target_path: "/tmp"
+
+  roles:
+    - execute_script

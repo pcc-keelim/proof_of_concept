@@ -1,0 +1,14 @@
+---
+- name: Copy script to target host
+  copy:
+    src: "files/scripts/{{ script_name }}"
+    dest: "{{ target_path }}/{{ script_name }}"
+    mode: '0755'
+
+- name: Execute the script with parameters
+  shell: "{{ target_path }}/{{ script_name }} {{ script_args }}"
+  register: script_output
+
+- name: Show script output
+  debug:
+    var: script_output.stdout

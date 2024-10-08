@@ -1,0 +1,9 @@
+[control-node]
+dc2-ds-etl-01.int.collectivemedicaltech.com ansible_host=192.168.53.194 ansible_user=marc.keeling
+
+[satellite-nodes]
+dc2-ds-db-01.int.collectivemedicaltech.com ansible_host= 192.168.53.196 ansible_user=marc.keeling
+dc2-ds-analysis-01.int.collectivemedicaltech.com ansible_host=192.168.53.195 ansible_user=marc.keeling
+
+[localhost]
+localhost
