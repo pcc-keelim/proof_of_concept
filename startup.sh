@@ -16,12 +16,13 @@ if [ $? -eq 0 ]; then
     echo "Do you want to overwrite the image? (y/n)"
     read overwrite
     if [ $overwrite == "y" ]; then
+        echo "Loading image..."
         docker load -i ds_dev_image.tar
     fi
 else
+    echo "Image not found. Loading image..."
     docker load -i ds_dev_image.tar
 fi
-
 
 # bash startup.sh
 mkdir ${USERPROFILE}/dockershare

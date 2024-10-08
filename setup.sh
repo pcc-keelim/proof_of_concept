@@ -11,7 +11,15 @@ sed -i 's/ca_cert: .*/ca_cert: \/root\/.ssl\/CMT-CA-CHAIN.crt/' /windows_shared/
 sed -i 's/ca_cert: .*/ca_cert: \/root\/.ssl\/CMT-CA-CHAIN.crt/' /windows_shared/secrets/secrets.yaml
 
 # copy the contents of /windows_shared to /root
-cp -r /windows_shared/* /root
+mkdir /root/.ssh
+cp -r /windows_shared/.ssh/* /root/.ssh
+mkdir /root/.dbt
+cp -r /windows_shared/.dbt/* /root/.dbt
+mkdir /root/.ssl
+cp -r /windows_shared/.ssl/* /root/.ssl
+mkdir /root/secrets
+cp -r /windows_shared/secrets/* /root/secrets
+
 chmod -R 700 /root/.ssh
 
 # copy pem file to etc/ssl/certs
@@ -32,5 +40,7 @@ git config --global --add safe.directory /code/ds-reporting-scheduling
 
 # run dbt setup
 cd  /code/ds-reporting-logic/src/dbt_datascience
+echo "running dbt debug"
 dbt debug 
+echo "running dbt compile"
 dbt compile

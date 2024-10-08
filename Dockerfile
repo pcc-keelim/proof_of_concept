@@ -9,7 +9,8 @@ RUN apt-get update && apt-get install -y \
     curl \
     telnetd \
     dos2unix \
-    openssh-client 
+    openssh-client \
+    tmux
 
 # Register the Microsoft Ubuntu repository
 RUN curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add -
@@ -48,12 +49,35 @@ RUN dbt deps
 
 
 # # Install vscode server
-RUN curl -fsSL https://code-server.dev/install.sh | sh
+# RUN curl -fsSL https://code-server.dev/install.sh | sh
 
-# # Install the extensions
-RUN code-server --install-extension ms-python.python
-RUN code-server --install-extension ms-toolsai.jupyter
-# RUN code-server --install-extension github.copilot
+# # # Install the extensions
+# # RUN code-server --install-extension github.copilot
+# # RUN code-server --install-extension github.copilot-chat
+# RUN code-server --install-extension gruntfuggly.todo-tree
+# RUN code-server --install-extension kevinrose.vsc-python-indent
+# RUN code-server --install-extension mark-wiemer.vscode-autohotkey-plus-plus     
+# RUN code-server --install-extension mechatroner.rainbow-csv
+# RUN code-server --install-extension ms-python.debugpy
+# RUN code-server --install-extension ms-python.isort
+# RUN code-server --install-extension ms-python.python
+# # RUN code-server --install-extension ms-python.vscode-pylance
+# RUN code-server --install-extension ms-toolsai.jupyter
+# RUN code-server --install-extension ms-toolsai.jupyter-keymap
+# RUN code-server --install-extension ms-toolsai.vscode-jupyter-cell-tags
+# RUN code-server --install-extension ms-toolsai.vscode-jupyter-slideshow
+# RUN code-server --install-extension ms-vscode.makefile-tools
+# RUN code-server --install-extension ms-vscode.notepadplusplus-keybindings       
+# # RUN code-server --install-extension ms-vsliveshare.vsliveshare
+# RUN code-server --install-extension redhat.vscode-yaml
+# RUN code-server --install-extension streetsidesoftware.code-spell-checker
+# RUN code-server --install-extension tamasfe.even-better-toml
+# # RUN code-server --install-extension visualstudioexptteam.intellicode-api-usage-examples
+# # RUN code-server --install-extension visualstudioexptteam.vscodeintellicode
+# RUN code-server --install-extension vmware.vscode-manifest-yaml
+# RUN code-server --install-extension vscjava.vscode-gradle
+# RUN code-server --install-extension vscjava.vscode-maven
+# # RUN code-server --install-extension wisetime.branch-in-window-title
 
 # Expose the port
 EXPOSE 8080
@@ -63,7 +87,6 @@ EXPOSE 3000
 COPY ./setup.sh /setup.sh
 RUN dos2unix /setup.sh
 
-# Start dagster dev server
 
 WORKDIR /code/ds-reporting-scheduling
 COPY .env /code/ds-reporting-scheduling/.env
