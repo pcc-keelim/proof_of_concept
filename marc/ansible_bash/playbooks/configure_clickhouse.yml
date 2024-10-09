@@ -16,8 +16,68 @@
       - "9440:9440"
       - "9004:9004"
       - "9010:9010"
+    cert_storage_path: "/tmp/certs"  # Path where certs will be generated locally
 
   tasks:
+    - name: Create directory for generated certificates locally
+      become: false
+      local_action:
+        module: file
+        path: "{{ cert_storage_path }}"
+        state: directory
+        mode: '0755'
+      delegate_to: localhost
+      tags:
+        - clickhouse
+        - certs
+
+    - name: Generate SSL certificate for ClickHouse locally using certificate_management.py
+      become: false
+      local_action: command python3 /home/marckeelingiv/dev/proof_of_concept/marc/py_ca/certificate_management.py {{ cert_storage_path }}
+      environment:
+        CA_PASSPHRASE: "your_ca_passphrase"
+        CERT_TYPE: "server"
+        CERT_NAME: "{{ ssl_cert_common_name }}"
+        VALIDITY_DAYS: "365"
+        ORG_NAME: "your_organization"
+        STATE: "your_state"
+        SAN_LIST: "clickhouse.local,localhost"
+      delegate_to: localhost
+      tags:
+        - clickhouse
+        - certs
+
+    - name: Transfer SSL certificate to remote server
+      copy:
+        src: "{{ cert_storage_path }}/{{ ssl_cert_common_name }}.cert.pem"
+        dest: "/etc/custom_certs/{{ ssl_cert_common_name }}.cert.pem"
+        mode: '0644'
+      tags:
+        - clickhouse
+        - ssl
+        - certs
+
+    - name: Transfer SSL private key to remote server
+      copy:
+        src: "{{ cert_storage_path }}/{{ ssl_cert_common_name }}.key.pem"
+        dest: "/etc/custom_certs/{{ ssl_cert_common_name }}.key.pem"
+        mode: '0600'
+      tags:
+        - clickhouse
+        - ssl
+        - certs
+
+    - name: Set the owner and group of the certificate files to clickhouse:clickhouse
+      file:
+        path: "/etc/custom_certs/"
+        recurse: yes
+        owner: clickhouse
+        group: clickhouse
+        state: directory
+      tags:
+        - clickhouse
+        - config
+
     - name: Create configuration directory for ClickHouse
       file:
         path: "{{ clickhouse_config_dir }}"
@@ -26,6 +86,7 @@
       tags:
         - clickhouse
         - config
+
 
     - name: Upload cluster configuration
       template:
