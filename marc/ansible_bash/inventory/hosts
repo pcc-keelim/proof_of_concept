@@ -6,4 +6,4 @@ dc2-ds-db-01.int.collectivemedicaltech.com ansible_host=192.168.53.196 ansible_u
 dc2-ds-analysis-01.int.collectivemedicaltech.com ansible_host=192.168.53.195 ansible_user=marc.keeling
 
 [localhost]
-localhost
+localhost ansible_connection=local
