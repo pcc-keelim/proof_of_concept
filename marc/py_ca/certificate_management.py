@@ -1,11 +1,10 @@
-import os
+import os # pylint: disable=missing-module-docstring
 from datetime import datetime, timedelta
-import shutil
+import sys
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.x509.oid import NameOID
-import sys
 
 class CertificateBase:
     """
@@ -25,7 +24,14 @@ class CertificateBase:
         """
         return rsa.generate_private_key(public_exponent=65537, key_size=key_size)
 
-    def create_cert(self, subject, issuer, public_key, private_key, validity_days, is_ca=False, san_list=None):
+    def create_cert(self,
+        subject,
+        issuer,
+        public_key,
+        private_key,
+        validity_days,
+        is_ca=False,
+        san_list=None):
         """
         Creates a certificate with the given attributes.
 
@@ -62,7 +68,13 @@ class CertificateBase:
         # Sign the certificate with the provided private key
         return builder.sign(private_key=private_key, algorithm=hashes.SHA256())
 
-    def create_and_sign_cert(self, subject, issuer, private_key, validity_days, is_ca=False, san_list=None):
+    def create_and_sign_cert(self,
+        subject,
+        issuer,
+        private_key,
+        validity_days,
+        is_ca=False,
+        san_list=None):
         """
         Helper function that combines key generation and certificate creation.
         This will be used by both CA and Server/Client certificates.
@@ -148,7 +160,7 @@ class CertificateBase:
         """
         if not cert_name:
             raise ValueError("Certificate name is required")
-        
+
         cert_folder = os.path.join(directory, cert_name)
         if not os.path.exists(cert_folder):
             os.makedirs(cert_folder)
@@ -229,10 +241,19 @@ class CertificateAuthority(CertificateBase):
             validity_days=365 * self.validity_years,
             is_ca=True
         )
-        
+
     # Use the common save method
     def _save_cert_and_key(self, cert_path, key_path):
         self._save_to_directory(self.ca_cert, self.private_key, cert_path, 'ca', self.passphrase)
+
+    def generate_certificate_authority(self, directory, key_path):
+        """
+        Generates the private key for the Certificate 
+        Authority (CA) and saves the CA certificate and key.
+        """
+        self.create_key()
+        self._create_cert()
+        self._save_cert_and_key(directory, key_path)
 
 class ServerClientCertificate(CertificateBase):
     """
@@ -311,11 +332,16 @@ class ServerClientCertificate(CertificateBase):
 
     # Use the common save method
     def _save_cert_and_key(self, directory):
-        self._save_to_directory(self.cert, self.private_key, directory, self.cert_name, self.passphrase)
+        self._save_to_directory(self.cert,
+            self.private_key,
+            directory,
+            self.cert_name,
+            self.passphrase)
 
     def generate_certificate(self, directory):
         """
-        Generates the private key for the server or client certificate and saves the certificate and key.
+        Generates the private key for the server or client 
+        certificate and saves the certificate and key.
         """
         self.private_key = self.generate_rsa_key(self.key_size)
         self._create_cert()
@@ -374,7 +400,7 @@ class ServerClientCertificate(CertificateBase):
 #         )
 
 #         cert.generate_certificate(ca_storage_path)
-        
+
 # Assuming arguments will be passed via sys.argv
 def main():
     ca_storage_path = sys.argv[1]  # Path passed from Ansible playbook
@@ -397,9 +423,7 @@ def main():
             passphrase=passphrase,
             encryption_type=encryption_type
         )
-        ca.create_key()
-        ca._create_cert()
-        ca._save_cert_and_key(cert_path=ca_storage_path, key_path=ca_storage_path)
+        ca.generate_certificate_authority(directory=ca_storage_path, key_path=ca_storage_path)
 
     # Generate server/client certificates based on Ansible input
     cert_type = os.environ.get("CERT_TYPE", "server")
