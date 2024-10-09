@@ -275,17 +275,17 @@ class CertificateAuthority(CertificateBase):
         )
 
     # Use the common save method
-    def _save_cert_and_key(self, cert_path, key_path):
+    def _save_cert_and_key(self, cert_path):
         self._save_to_directory(self.ca_cert, self.private_key, cert_path, 'ca', self.passphrase)
 
-    def generate_certificate_authority(self, directory, key_path):
+    def generate_certificate_authority(self, directory):
         """
         Generates the private key for the Certificate 
         Authority (CA) and saves the CA certificate and key.
         """
         self.create_key()
         self._create_cert()
-        self._save_cert_and_key(directory, key_path)
+        self._save_cert_and_key(directory)
 
 class ServerClientCertificate(CertificateBase):
     """
@@ -386,8 +386,14 @@ def main():
     passphrase = os.environ.get("CA_PASSPHRASE")
 
     # Load the CA if it exists
-    if os.path.exists(ca_storage_path):
-        ca = CertificateAuthority.from_file(ca_storage_path, passphrase)
+    if os.path.exists(ca_storage_path) and len(os.listdir(ca_storage_path)) > 0:
+        try:
+            ca = CertificateAuthority.from_file(ca_storage_path, passphrase)
+            print(f"Loaded existing CA from {ca_storage_path}")
+        except FileNotFoundError:
+            print(f"CA files missing in {ca_storage_path}. Generating a new CA...")
+            ca = CertificateAuthority(passphrase=passphrase)
+            ca.generate_certificate_authority(ca_storage_path)
     else:
         # Use environment variables to set up CA attributes (passphrase, encryption type)
         encryption_type = os.environ.get("CA_ENCRYPTION_TYPE", "PKCS8")
@@ -402,7 +408,7 @@ def main():
             passphrase=passphrase,
             encryption_type=encryption_type
         )
-        ca.generate_certificate_authority(directory=ca_storage_path, key_path=ca_storage_path)
+        ca.generate_certificate_authority(directory=ca_storage_path)
 
     # Check if we should generate a server/client certificate
     generate_certificate = os.environ.get("GENERATE_CERTIFICATE", "false").lower() == "true"
