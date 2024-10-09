@@ -1,0 +1,6 @@
+---
+- hosts: [control-node]
+  gather_facts: false
+  become: true
+  roles:
+    - ../roles/docker_clickhouse

@@ -2,10 +2,9 @@
     <openSSL>
         <server>
             <!--REPLACEMEWITHHOST is changed when setup.sh is run -->
-            <!-- TODO configure our own certificate authority for convenience -->
-            <!-- <caConfig>/etc/custom_certs/cmt-ca-chain.pem</caConfig>		     -->
-            <certificateFile>/etc/custom_certs/{{ ssl_cert_common_name }}.cert.pem</certificateFile>
-            <privateKeyFile>/etc/custom_certs/{{ ssl_cert_common_name }}.key.pem</privateKeyFile>	    
+            <caConfig>{{ remote_certs_dir }}/ca.cert.pem</caConfig>
+            <certificateFile>{{ remote_certs_dir }}/{{ ssl_cert_common_name }}.cert.pem</certificateFile>
+            <privateKeyFile>{{ remote_certs_dir }}/{{ ssl_cert_common_name }}.key.pem</privateKeyFile>
             <!-- <dhParamsFile>/etc/custom_certs/dhparam.pem</dhParamsFile>	may need in future		     -->
             <!-- TODO Change this back to relaxed then figure out how to pass the correct files -->
             <verificationMode>none</verificationMode>

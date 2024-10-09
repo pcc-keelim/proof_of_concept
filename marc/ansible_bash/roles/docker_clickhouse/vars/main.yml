@@ -1,0 +1,45 @@
+ca_cert_path: "/etc/ssl/certs/clickhouse-ca-cert.pem"
+ca_key_path: "/etc/ssl/private/clickhouse-ca-key.pem"
+ssl_cert_common_name: "clickhouse"
+# ca_passphrase: "your_simple_ca_passphrase"
+cert_storage_path: "/home/marckeelingiv/dev/proof_of_concept/marc/tmp"
+cert_name: "clickhouse"
+validity_days: "365"
+org_name: "PointClickCare"
+state: "UT"
+san_list: "clickhouse.local,localhost"
+remote_certs_dir: "/gdw/certs"
+clickhouse_config_dir: "/etc/clickhouse-server/config.d"
+cluster_name: "clickhouse-cluster"
+
+clickhouse:
+  cluster:
+    name: one_shard_three_replicas
+    replicas:
+      - host: dc2-ds-etl-01.int.collectivemedicaltech.com
+        port: 9000
+      # - host: dc2-ds-db-01.int.collectivemedicaltech.com
+        # port: 9000
+      # - host: dc2-ds-analysis-01.int.collectivemedicaltech.com
+        # port: 9000
+  keeper_server:
+    tcp_port: 9181
+    server_id: 1
+    log_storage_path: /var/lib/clickhouse/coordination/log
+    snapshot_storage_path: /var/lib/clickhouse/coordination/snapshots
+    operation_timeout_ms: 10000
+    session_timeout_ms: 30000
+    raft_logs_level: debug
+    raft_configuration:
+      - id: 1
+        hostname: dc2-ds-etl-01.int.collectivemedicaltech.com
+        port: 9234
+      # - id: 2
+        # hostname: dc2-ds-db-01.int.collectivemedicaltech.com
+        # port: 9234
+      # - id: 3
+        # hostname: dc2-ds-analysis-01.int.collectivemedicaltech.com
+        # port: 9234
+docker_image: "clickhouse/clickhouse-server:23.10.5.20"
+clickhouse_container_name: "clickhouse-server"
+docker_network: "clickhouse-net"

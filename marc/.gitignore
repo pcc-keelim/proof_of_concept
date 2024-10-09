@@ -1,3 +1,4 @@
 ansible-env/
+tmp/
 .ipynb_checkpoints/
 *.pem
