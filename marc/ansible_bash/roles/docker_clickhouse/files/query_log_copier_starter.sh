@@ -1,0 +1,1 @@
+bash /scripts_to_run_in_container/query_log_copier.sh &

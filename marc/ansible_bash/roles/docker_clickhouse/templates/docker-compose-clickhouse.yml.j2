@@ -1,0 +1,39 @@
+version: "3.3"
+
+services:
+  clickhouse_server:
+    container_name: {{ clickhouse_container_name }}
+    build:
+      context: {{ gdw_dir }}
+      dockerfile: DockerFile.clickhouse
+    ports:
+      - 8443:8443
+      - 9000:9000
+      - 9004:9004
+      - 9010:9010
+      - 9440:9440
+    volumes:
+      # - /data/ch_db:/var/lib/clickhouse
+      - {{ clickhouse_config_dir }}:/etc/clickhouse-server/config.d
+      - {{ clickhouse_users_dir}}:/etc/clickhouse-server/users.d
+      - {{ clickhouse_init_dir}}:/docker-entrypoint-initdb.d
+      - {{ clickhouse_logs_dir }}:/var/log/clickhouse-server
+      # Below may need to change to the default location of the certs on the server
+      - {{ remote_certs_dir }}:{{ remote_certs_dir }}
+    environment:
+      - TZ=America/Denver
+      # UID of clickhouse user on host machine
+      - CLICKHOUSE_UID=997
+      # GID of clichouse group on host machine
+      - CLICKHOUSE_GID=998
+    networks:
+      clickhouse-net:
+        ipv4_address: 65.65.65.10
+
+networks:
+  clickhouse-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 65.65.65.0/24
+          gateway: 65.65.65.1  # Add a gateway IP for the subnet

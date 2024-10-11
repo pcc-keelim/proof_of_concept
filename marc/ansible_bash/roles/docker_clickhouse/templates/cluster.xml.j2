@@ -1,16 +1,21 @@
 <clickhouse>
     <remote_servers>
-        <{{ clickhouse.cluster.name }}>  
+        {% for cluster in clickhouse.clusters %}
+        <{{ cluster.name }}>
+            {% for shard in cluster.shards %}
             <shard>
-                {% for replica in clickhouse.cluster.replicas %}
+                {% for replica in shard.replicas %}
                 <replica>  
-                    <host>{{ replica.host }}</host>  
-                    <port>{{ replica.port }}</port>  
+                    <host>{{ replica.host }}</host>
+                    <port>{{ replica.port }}</port>
                 </replica>  
                 {% endfor %}
-            </shard>  
-        </{{ clickhouse.cluster.name }}>
+            </shard>
+            {% endfor %}
+        </{{ cluster.name }}>
+        {% endfor %}
     </remote_servers>
+
     <keeper_server>  
         <tcp_port>{{ clickhouse.keeper_server.tcp_port }}</tcp_port>  
         <server_id>{{ clickhouse.keeper_server.server_id }}</server_id>  

@@ -101,71 +101,101 @@
   tags:
     - permissions
 
-- name: Create configuration directory for ClickHouse
+- name: Create directories for ClickHouse
   file:
-    path: "{{ clickhouse_config_dir }}"
+    path: "{{ item }}"
     state: directory
     owner: "clickhouse"
     group: "clickhouse"
     mode: '0755'
+  loop: 
+    - "{{ clickhouse_config_dir }}"
+    - "{{ clickhouse_users_dir }}"
+    - "{{ clickhouse_init_dir }}"
+    - "{{ clickhouse_logs_dir }}"
   tags:
     - config
 
-- name: Remove existing ClickHouse configuration files
-  file:
-    path: "{{ clickhouse_config_dir }}/{{ item.dest }}"
-    state: absent
+- name: Clickhouse Config files
+  vars:
+    clickhouse_template_files:
+      - { src: 'cluster.xml.j2', dest: '{{ clickhouse_config_dir }}/cluster.xml' }
+      - { src: 'ssl.xml.j2', dest: '{{ clickhouse_config_dir }}/ssl.xml' }
+      - { src: 'docker_related_config.xml.j2', dest: '{{ clickhouse_config_dir }}/docker_related_config.xml' }
+      # - { src: 'macros.xml.j2', dest: '{{ clickhouse_config_dir }}/macros.xml' }
+      - { src: 'network.xml.j2', dest: '{{ clickhouse_config_dir }}/network.xml' }
+      - { src: 'other_db_customizations.xml.j2', dest: '{{ clickhouse_config_dir }}/other_db_customizations.xml' }
+      - { src: 'users.xml.j2', dest: '{{ clickhouse_users_dir }}/users.xml' }
+    clickhouse_static_files:
+      - { src: 'airbyte_user.sql', dest: '{{ clickhouse_init_dir }}/airbyte_user.sql' }
+      - { src: 'create_databases.sql', dest: '{{ clickhouse_init_dir }}/create_databases.sql' }
+      - { src: 'create_user_roles.sql', dest: '{{ clickhouse_init_dir }}/create_user_roles.sql' }
+      - { src: 'create_users.sql', dest: '{{ clickhouse_init_dir }}/create_users.sql' }
+      # - { src: 'query_log_copier_starter.sh', dest: '{{ clickhouse_init_dir }}/query_log_copier_starter.sh' }
+      - { src: 'query_log_copier.sh', dest: '{{ gdw_dir }}/query_log_copier.sh' }
+    all_clickhouse_files: "{{ clickhouse_template_files + clickhouse_static_files }}"
+  block: 
+  - name: Remove existing ClickHouse configuration files
+    file:
+      path: "{{ item.dest }}"
+      state: absent
+    loop: "{{ all_clickhouse_files }}"
+
+  - name: Upload primary ClickHouse configuration templates
+    template:
+      src: "{{ item.src }}"
+      dest: "{{ item.dest }}"
+      owner: clickhouse
+      group: clickhouse
+      mode: '0644'
+    loop: "{{ clickhouse_template_files }}"
+  
+  - name: Upload primary Clickhouse configuration files
+    copy:
+      src: "{{ item.src }}"
+      dest: "{{ item.dest }}"
+      owner: clickhouse
+      group: clickhouse
+      mode: '0644'
+    loop: "{{ clickhouse_static_files }}"
+
+  - name: Set ownership and permissions for ClickHouse configuration files
+    file:
+      path: "{{ item }}"
+      owner: "clickhouse"
+      group: "clickhouse"
+      mode: '0755'
+    loop: "{{ all_clickhouse_files | map(attribute='dest') }}"
+
+  - name: Set ownership and permissions for ClickHouse configuration directory
+    file:
+      path: "{{ item }}"
+      owner: "clickhouse"
+      group: "clickhouse"
+      recurse: yes
+      mode: '0755'
+    loop: 
+      - "{{ clickhouse_config_dir }}"
+      - "{{ clickhouse_users_dir }}"
+  tags:
+    - config
+    - ClickhouseConfig
+
+- name: Verify required directories exist on the remote host
+  stat:
+    path: "{{ item.path }}"
+  register: dir_check
   loop:
-    - { dest: 'cluster.xml' }
-    - { dest: 'ssl.xml' }
-    - { dest: 'docker_related_config.xml' }
-    - { dest: 'network.xml' }
-  tags:
-    - config
+    - { path: "{{ clickhouse_config_dir }}", error_message: "clickhouse_config_dir does not exist on the remote host." }
+    - { path: "{{ remote_certs_dir }}", error_message: "remote_certs_dir does not exist on the remote host." }
+    - { path: "{{ clickhouse_logs_dir }}", error_message: "clickhouse_logs_dir does not exist on the remote host." }
+    - { path: "{{ clickhouse_init_dir }}", error_message: "clickhouse_init_dir does not exist on the remote host." }
+    - { path: "{{ gdw_dir }}", error_message: "gdw_dir does not exist on the remote host." }
+    - { path: "{{ gdw_dir }}/certs", error_message: "gdw_dir/certs does not exist on the remote host." }
+  failed_when: dir_check.stat.exists == false
+  when: item.path != ""
 
-- name: Upload primary ClickHouse configuration templates
-  template:
-    src: "{{ item.src }}"
-    dest: "{{ clickhouse_config_dir }}/{{ item.dest }}"
-    owner: clickhouse
-    group: clickhouse
-    mode: '0644'
-  loop:
-    - { src: 'cluster.xml.j2', dest: 'cluster.xml' }
-    - { src: 'ssl.xml.j2', dest: 'ssl.xml' }
-    - { src: 'docker_related_config.xml.j2', dest: 'docker_related_config.xml' }
-    - { src: 'network.xml.j2', dest: 'network.xml' }
-    - { src: 'other_db_customizations.xml.j2', dest: 'other_db_customizations.xml' }
-  tags:
-    - config
-
-- name: Set ownership and permissions for ClickHouse configuration directory
-  file:
-    path: "{{ clickhouse_config_dir }}"
-    owner: "clickhouse"
-    group: "clickhouse"
-    recurse: yes
-    mode: '0755'
-  tags:
-    - config
-
-- name: Set ownership and permissions for ClickHouse configuration files
-  file:
-    path: "{{ item }}"
-    owner: "clickhouse"
-    group: "clickhouse"
-    mode: '0755'
-  loop:
-    - "{{ clickhouse_config_dir }}/cluster.xml"
-    - "{{ clickhouse_config_dir }}/network.xml"
-    - "{{ clickhouse_config_dir }}/docker_related_config.xml"
-    - "{{ clickhouse_config_dir }}/ssl.xml"
-    - "{{ clickhouse_config_dir }}/other_db_customizations.xml"
-
-  tags:
-    - config
-
-- name: Download, transfer, and upload Docker image if not present
+- name: Task Group - Docker Download, transfer, and upload
   block:
     - name: Check if the Docker image exists on the remote host
       shell: docker images -q clickhouse/clickhouse-server:23.10.5.20
@@ -210,75 +240,37 @@
     - docker
     - image
 
-- name: remove Clickhouse Container if running
-  docker_container:
-    name: "{{ clickhouse_container_name }}"
-    state: absent
-  tags:
-    - clickhouse
-    - docker
-    - remove
-    - start2
-
-- name: Verify ClickHouse Docker variables
-  block:
-    - name: Validate required variables for ClickHouse Docker container
-      vars:
-        clickhouse_docker_variables:
-          - { var_name: "clickhouse_container_name", var_value: "{{ clickhouse_container_name }}", error_message: "clickhouse_container_name is not defined or is empty." }
-          - { var_name: "docker_image", var_value: "{{ docker_image }}", error_message: "docker_image is not defined or is empty." }
-          - { var_name: "clickhouse_config_dir", var_value: "{{ clickhouse_config_dir }}", error_message: "clickhouse_config_dir is not defined or is empty." }
-          - { var_name: "remote_certs_dir", var_value: "{{ remote_certs_dir }}", error_message: "remote_certs_dir is not defined or is empty." }
-          - { var_name: "docker_network", var_value: "{{ docker_network }}", error_message: "docker_network is not defined or is empty." }
-      fail:
-        msg: "{{ item.error_message }}"
-      loop: "{{ clickhouse_docker_variables }}"
-      when: item.var_value is undefined or item.var_value == ""
-
-    - name: Verify required directories exist on the remote host
-      vars:
-        required_directories:
-          - { path: "{{ clickhouse_config_dir }}", error_message: "clickhouse_config_dir does not exist on the remote host." }
-          - { path: "{{ remote_certs_dir }}", error_message: "remote_certs_dir does not exist on the remote host." }
-      stat:
-        path: "{{ item.path }}"
-      register: dir_check
-      loop: "{{ required_directories }}"
-      failed_when: dir_check.stat.exists == false
-      when: item.path != ""
-  tags:
-    - clickhouse
-    - docker
-    - debug
-
 - name: Start ClickHouse Docker container with configuration and certificates
-  docker_container:
-    name: "{{ clickhouse_container_name }}"
-    image: "{{ docker_image }}"
-    state: started
-    # restart_policy: always
-    user: clickhouse
-    ports:
-      - "8123:8123"
-      - "8443:8443"
-      - "9440:9440"
-      - "9000:9000"
-      - "9004:9004"
-      - "9010:9010"
-    volumes:
-      - "{{ clickhouse_config_dir }}:{{clickhouse_config_dir}}:ro"
-      - "{{ remote_certs_dir }}:{{remote_certs_dir}}:ro"
-    env:
-      CLICKHOUSE_USER: "clickhouse"
-      CLICKHOUSE_PASSWORD: "clickhouse"
-    log_driver: "json-file"
-    log_options:
-      max-size: "10m"
-      max-file: "3"
-    # networks:
-      # - "{{ docker_network }}"
+  block:
+
+    - name: Remove existing ClickHouse container if running
+      docker_container:
+        name: "{{ clickhouse_container_name }}"
+        state: absent
+      tags:
+        - remove
+
+    - name: Copy Dockerfile to remote server
+      template:
+        src: Dockerfile.clickhouse.j2
+        dest: "{{ gdw_dir }}/DockerFile.clickhouse"
+
+    - name: Remove Docker Compose file on remote server
+      file:
+        path: "{{ gdw_dir }}/docker-compose-clickhouse.yml"
+        state: absent
+      tags:
+        - remove
+
+    - name: Copy Docker Compose file to remote server
+      template:
+        src: docker-compose-clickhouse.yml.j2
+        dest: "{{ gdw_dir }}//docker-compose-clickhouse.yml"
+
+    - name: Start Clickhouse container using Docker Compose
+      command: docker compose -f {{ gdw_dir }}/docker-compose-clickhouse.yml up -d
   tags:
-    - clickhouse
     - docker
-    - start
-    - start2
+
+
+

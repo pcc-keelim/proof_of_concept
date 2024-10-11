@@ -8,20 +8,34 @@ validity_days: "365"
 org_name: "PointClickCare"
 state: "UT"
 san_list: "clickhouse.local,localhost"
+gdw_dir: "/gdw"
 remote_certs_dir: "/gdw/certs"
 clickhouse_config_dir: "/etc/clickhouse-server/config.d"
+clickhouse_users_dir: "/etc/clickhouse-server/users.d"
+clickhouse_init_dir: "/gdw/clickhouse-init"
+clickhouse_logs_dir: "/var/log/clickhouse-server"
 cluster_name: "clickhouse-cluster"
 
 clickhouse:
-  cluster:
-    name: one_shard_three_replicas
-    replicas:
-      - host: dc2-ds-etl-01.int.collectivemedicaltech.com
-        port: 9000
-      # - host: dc2-ds-db-01.int.collectivemedicaltech.com
-        # port: 9000
-      # - host: dc2-ds-analysis-01.int.collectivemedicaltech.com
-        # port: 9000
+  clusters:
+    - name: one_shard_three_replicas
+      shards:
+        - replicas:
+          - host: dc2-ds-etl-01.int.collectivemedicaltech.com
+            port: 9000
+    #       - host: dc2-ds-db-01.int.collectivemedicaltech.com
+    #         port: 9000
+    #       - host: dc2-ds-analysis-01.int.collectivemedicaltech.com
+    #         port: 9000
+    # - name: three_shared_one_replica
+    #   shards:
+    #     - replicas:
+    #       - host: dc2-ds-etl-01.int.collectivemedicaltech.com
+    #         port: 9000
+    #       - host: dc2-ds-db-01.int.collectivemedicaltech.com
+    #         port: 9000
+    #       - host: dc2-ds-analysis-01.int.collectivemedicaltech.com
+    #         port: 9000
   keeper_server:
     tcp_port: 9181
     server_id: 1
@@ -34,12 +48,12 @@ clickhouse:
       - id: 1
         hostname: dc2-ds-etl-01.int.collectivemedicaltech.com
         port: 9234
-      # - id: 2
-        # hostname: dc2-ds-db-01.int.collectivemedicaltech.com
-        # port: 9234
-      # - id: 3
-        # hostname: dc2-ds-analysis-01.int.collectivemedicaltech.com
-        # port: 9234
+      - id: 2
+        hostname: dc2-ds-db-01.int.collectivemedicaltech.com
+        port: 9234
+      - id: 3
+        hostname: dc2-ds-analysis-01.int.collectivemedicaltech.com
+        port: 9234
 docker_image: "clickhouse/clickhouse-server:23.10.5.20"
 clickhouse_container_name: "clickhouse-server"
 docker_network: "clickhouse-net"

@@ -1,0 +1,21 @@
+FROM clickhouse/clickhouse-server:23.10.5.20
+
+# This image uses amd64 architecture. This needs to be known so that the correct backup build can be downloaded/used below
+# The following command would print what aritechture is being usied in the image (amd64 or arm64)
+# RUN echo $(dpkg --print-architecture)
+# Install rsync and systemctl
+# RUN apt-get update && apt-get install -y rsync systemctl dos2unix tmux
+
+# WORKDIR /var/backup
+# Downloaded from https://github.com/Altinity/clickhouse-backup/releases/download/v2.4.17/clickhouse-backup-linux-amd64.tar.gz
+# COPY ./clickhouse-backup/clickhouse-backup-linux-amd64.tar.gz .
+# RUN tar -xf clickhouse-backup-linux-amd64.tar.gz
+# RUN cp build/linux/amd64/clickhouse-backup /usr/local/bin
+# Prints version of clickhouse-backup being used
+# RUN echo $(clickhouse-backup -v)
+
+# COPY ./clickhouse-backup/config.yml /etc/clickhouse-backup/config.yml
+# COPY ./clickhouse-backup/backup_scripts.sh /etc/clickhouse-backup/backup_scripts.sh
+
+# RUN mkdir /scripts_to_run_in_container
+# COPY {{ gdw_dir }}/query_log_copier.sh /scripts_to_run_in_container
