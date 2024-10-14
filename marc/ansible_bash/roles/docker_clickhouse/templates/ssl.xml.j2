@@ -7,7 +7,7 @@
             <privateKeyFile>{{ remote_certs_dir }}/{{ ssl_cert_common_name }}.key.pem</privateKeyFile>
             <!-- <dhParamsFile>/etc/custom_certs/dhparam.pem</dhParamsFile>	may need in future		     -->
             <!-- TODO Change this back to relaxed then figure out how to pass the correct files -->
-            <verificationMode>none</verificationMode>
+            <verificationMode>relaxed</verificationMode>
             <loadDefaultCAFile>false</loadDefaultCAFile>
             <cacheSessions>true</cacheSessions>
             <disableProtocols>sslv2,sslv3</disableProtocols>

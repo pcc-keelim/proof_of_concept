@@ -1,4 +1,4 @@
-version: "3.3"
+version: "3.8"
 
 services:
   clickhouse_server:
@@ -7,13 +7,13 @@ services:
       context: {{ gdw_dir }}
       dockerfile: DockerFile.clickhouse
     ports:
+      - 8123:8123
       - 8443:8443
       - 9000:9000
       - 9004:9004
       - 9010:9010
       - 9440:9440
     volumes:
-      # - /data/ch_db:/var/lib/clickhouse
       - {{ clickhouse_config_dir }}:/etc/clickhouse-server/config.d
       - {{ clickhouse_users_dir}}:/etc/clickhouse-server/users.d
       - {{ clickhouse_init_dir}}:/docker-entrypoint-initdb.d

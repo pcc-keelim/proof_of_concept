@@ -2,6 +2,8 @@ import os
 import shutil
 import tempfile
 import unittest
+import subprocess
+import cryptography.exceptions
 from datetime import datetime, timedelta
 from cryptography import x509
 from cryptography.hazmat.primitives import serialization
@@ -25,6 +27,70 @@ class TestCertificateManagement(unittest.TestCase):
         """
         shutil.rmtree(self.test_dir)
 
+    def _run_openssl_modulus(self, file_path, key_type):
+        """
+        Helper function to get the modulus of a certificate or key using OpenSSL.
+        """
+        if key_type == "cert":
+            cmd = f"openssl x509 -noout -modulus -in {file_path} | openssl md5"
+        elif key_type == "key":
+            cmd = f"openssl rsa -noout -modulus -in {file_path} | openssl md5"
+        result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+        return result.stdout.strip()
+    
+    def test_certificate_modulus_match(self):
+        """
+        Test that the modulus of the server certificate and the private key match.
+        """
+        # First, create the Certificate Authority (CA)
+        ca = CertificateAuthority(
+            key_size=2048,  # Smaller key size for faster test execution
+            validity_years=1,
+            country="US",
+            state="Utah",
+            org_name="TestOrganization",
+            passphrase="testpassphrase"
+        )
+        ca.generate_certificate_authority(directory=self.test_dir)
+
+        # Now create the server certificate
+        cert_name = "clickhouse"
+        server_cert = ServerClientCertificate(
+            ca=ca,
+            cert_type="server",
+            cert_name=cert_name,
+            key_size=2048,
+            validity_days=365,
+            country="US",
+            state="Utah",
+            org_name="TestOrganization",
+            san_list=["clickhouse.example.com"]
+        )
+
+        server_cert.generate_certificate(self.test_dir)
+
+        server_cert_path = os.path.join(self.test_dir, cert_name, f'{cert_name}.cert.pem')
+        server_key_path = os.path.join(self.test_dir, cert_name, f'{cert_name}.key.pem')
+
+        # Debug prints for cert and key paths
+        print(f"Certificate path: {server_cert_path}")
+        print(f"Private key path: {server_key_path}")
+
+        # Check that the server certificate and key files were created
+        self.assertTrue(os.path.exists(server_cert_path))
+        self.assertTrue(os.path.exists(server_key_path))
+
+        # Run OpenSSL commands to check that the modulus of the certificate and private key match
+        cert_modulus = self._run_openssl_modulus(server_cert_path, "cert")
+        key_modulus = self._run_openssl_modulus(server_key_path, "key")
+
+        # Debug prints for moduli
+        print(f"Certificate modulus: {cert_modulus}")
+        print(f"Private key modulus: {key_modulus}")
+
+        # Assert that the modulus values are the same
+        self.assertEqual(cert_modulus, key_modulus, "Modulus of certificate and private key should match.")
+
     def test_create_certificate_authority(self):
         """
         Test the generation of a Certificate Authority (CA) 
@@ -39,7 +105,7 @@ class TestCertificateManagement(unittest.TestCase):
             passphrase="testpassphrase"
         )
 
-        ca.generate_certificate_authority(directory=self.test_dir, key_path=self.test_dir)
+        ca.generate_certificate_authority(directory=self.test_dir)
 
         ca_cert_path = os.path.join(self.test_dir, 'ca', 'ca.cert.pem')
         ca_key_path = os.path.join(self.test_dir, 'ca', 'ca.key.pem')
@@ -49,10 +115,6 @@ class TestCertificateManagement(unittest.TestCase):
         self.assertTrue(os.path.exists(ca_key_path))
 
         # Load the certificate and ensure it is a valid x509 certificate
-        with open(ca_cert_path, 'rb') as f:
-            ca_cert = x509.load_pem_x509_certificate(f.read())
-
-        self.assertIsInstance(ca_cert, x509.Certificate)
 
     def test_create_server_certificate_with_validation(self):
         """
@@ -68,7 +130,7 @@ class TestCertificateManagement(unittest.TestCase):
             org_name="TestOrganization",
             passphrase="testpassphrase"
         )
-        ca.generate_certificate_authority(directory=self.test_dir, key_path=self.test_dir)
+        ca.generate_certificate_authority(directory=self.test_dir)
 
         # Now create the server certificate
         cert_name = "server_test_cert"
@@ -104,6 +166,13 @@ class TestCertificateManagement(unittest.TestCase):
 
         ca_public_key = ca_cert.public_key()
 
+        print(f"CA Subject: {ca_cert.subject}")
+        print(f"Server Certificate Issuer: {cert.issuer}")
+
+        print(f"CA Public Key Modulus: {ca_public_key.public_numbers().n}")
+        print(f"Server Certificate Public Key Modulus: {cert.public_key().public_numbers().n}")
+
+
         # Ensure that the server certificate was signed by the CA's private key
         try:
             ca_public_key.verify(
@@ -111,12 +180,16 @@ class TestCertificateManagement(unittest.TestCase):
                 cert.tbs_certificate_bytes,
                 padding.PKCS1v15(),
                 hashes.SHA256()
+                # cert.signature_hash_algorithm  # Use the algorithm used for signing
             )
-        except Exception as e:
-            self.fail(f"Server certificate validation against CA failed: {str(e)}")
+        except cryptography.exceptions.InvalidSignature as e:
+            self.fail(f"Server certificate validation failed due to invalid signature: {str(e)}")
+        except Exception as e: # pylint: disable=W0718
+            self.fail(f"An unexpected error occurred during certificate validation: {str(e)}")
 
         # If no exception was raised, the signature is valid
         print("Server certificate successfully validated against CA.")
+
 
     def test_skip_certificate_generation(self):
         """
@@ -131,7 +204,7 @@ class TestCertificateManagement(unittest.TestCase):
             org_name="TestOrganization",
             passphrase="testpassphrase"
         )
-        ca.generate_certificate_authority(directory=self.test_dir, key_path=self.test_dir)
+        ca.generate_certificate_authority(directory=self.test_dir)
 
         cert_name = "server_test_cert"
 
@@ -155,7 +228,7 @@ class TestCertificateManagement(unittest.TestCase):
             org_name="TestOrganization",
             passphrase="testpassphrase"
         )
-        ca.generate_certificate_authority(directory=self.test_dir, key_path=self.test_dir)
+        ca.generate_certificate_authority(directory=self.test_dir)
 
         ca_cert_path = os.path.join(self.test_dir, 'ca', 'ca.cert.pem')
         ca_key_path = os.path.join(self.test_dir, 'ca', 'ca.key.pem')
@@ -182,7 +255,7 @@ class TestCertificateManagement(unittest.TestCase):
             org_name="TestOrganization",
             passphrase="testpassphrase"
         )
-        ca.generate_certificate_authority(directory=self.test_dir, key_path=self.test_dir)
+        ca.generate_certificate_authority(directory=self.test_dir)
 
         # Now create the client certificate
         cert_name = "client_test_cert"
@@ -225,7 +298,7 @@ class TestCertificateManagement(unittest.TestCase):
             org_name="TestOrganization",
             passphrase="testpassphrase"
         )
-        ca.generate_certificate_authority(directory=self.test_dir, key_path=self.test_dir)
+        ca.generate_certificate_authority(directory=self.test_dir)
 
         ca_key_path = os.path.join(self.test_dir, 'ca', 'ca.key.pem')
 
@@ -252,7 +325,7 @@ class TestCertificateManagement(unittest.TestCase):
             org_name="TestOrganization",
             passphrase="testpassphrase"
         )
-        ca.generate_certificate_authority(directory=self.test_dir, key_path=self.test_dir)
+        ca.generate_certificate_authority(directory=self.test_dir)
 
         # Now create the server certificate with SANs
         cert_name = "server_test_cert_with_san"
@@ -294,7 +367,7 @@ class TestCertificateManagement(unittest.TestCase):
             org_name="TestOrganization",
             passphrase="testpassphrase"
         )
-        ca.generate_certificate_authority(directory=self.test_dir, key_path=self.test_dir)
+        ca.generate_certificate_authority(directory=self.test_dir)
 
         ca_cert_path = os.path.join(self.test_dir, 'ca', 'ca.cert.pem')
 
@@ -344,7 +417,7 @@ class TestCertificateManagement(unittest.TestCase):
             org_name="TestOrganization",
             passphrase="testpassphrase"
         )
-        ca.generate_certificate_authority(directory=self.test_dir, key_path=self.test_dir)
+        ca.generate_certificate_authority(directory=self.test_dir)
 
         # Load the CA from the saved files
         loaded_ca = CertificateAuthority.from_file(

@@ -20,4 +20,17 @@
 
     <!-- Default session timeout, in seconds. Default: 60. -->
     <default_session_timeout>180</default_session_timeout>
+
+    <!-- Listen wildcard address to allow accepting connections from other containers and host network. -->
+    <listen_host>::</listen_host>
+    <listen_host>0.0.0.0</listen_host>
+    <listen_host>65.65.65.10</listen_host> 
+    
+    <listen_try>1</listen_try>
+
+    <!-- TODO change back to normal logging levels -->
+    <logger>
+        <console>1</console>
+        <level>trace</level>
+    </logger>
 </clickhouse>

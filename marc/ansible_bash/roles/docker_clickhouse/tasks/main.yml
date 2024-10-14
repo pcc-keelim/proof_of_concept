@@ -1,28 +1,4 @@
 ---
-- name: Configure Local Certificate Authority
-  block:
-    - name: Create directory for generated certificates locally
-      local_action:
-        module: file
-        path: "{{ cert_storage_path }}"
-        state: directory
-        mode: '0755'
-      delegate_to: localhost
-      become: false
-
-    - name: Generate certificate Authority if not exists certificate_management.py
-      become: false
-      local_action: command python3 /home/marckeelingiv/dev/proof_of_concept/marc/py_ca/certificate_management.py {{ cert_storage_path }}
-      environment:
-        # CA_PASSPHRASE: "{{ ca_passphrase }}"
-        CERT_TYPE: "ca"
-        CERT_NAME: "{{ ssl_cert_common_name }}"
-        VALIDITY_DAYS: "365"
-        ORG_NAME: "{{ org_name }}"
-        STATE: "{{ state }}"
-        SAN_LIST: "{{ san_list }}"
-        GENERATE_CERTIFICATE: "false"
-      delegate_to: localhost
       
 - name: generate SAN_LIST
   block:
@@ -49,38 +25,63 @@
       debug:
         msg: "SAN_LIST is {{ san_list }}"
 
-    - name: Execute Python script with the SAN_LIST
-      command: python3 /home/marckeelingiv/dev/proof_of_concept/marc/py_ca/certificate_management.py {{ cert_storage_path }}
+- name: Configure Local Certificate Authority
+  block:
+    - name: Create directory for generated certificates locally
+      become: false
+      local_action:
+        module: file
+        path: "{{ cert_storage_path }}"
+        state: directory
+        mode: '0755'
+      delegate_to: localhost
+
+    - name: Generate Certificate Authority (CA) if not present with certificate_management.py
+      become: false
+      local_action: command python3 /home/marckeelingiv/dev/proof_of_concept/marc/py_ca/certificate_management.py
       environment:
         # CA_PASSPHRASE: "{{ ca_passphrase }}"
+        REQUEST_TYPE: "generate_ca"
+        CA_STORAGE_PATH: "{{ cert_storage_path }}/ca"
+        CA_VALIDITY_YEARS: "2"
+        CA_ORG_NAME: "{{ ca_org_name }}"
+        CA_STATE: "{{ ca_state }}"
+      delegate_to: localhost
+
+    - name: Generate server certificate with certificate_management.py
+      become: false
+      local_action: command python3 /home/marckeelingiv/dev/proof_of_concept/marc/py_ca/certificate_management.py
+      environment:
+        # CA_PASSPHRASE: "{{ ca_passphrase }}"
+        REQUEST_TYPE: "generate_server_cert"
+        CA_STORAGE_PATH: "{{ cert_storage_path }}/ca"
         CERT_TYPE: "server"
         CERT_NAME: "{{ ssl_cert_common_name }}"
-        VALIDITY_DAYS: "365"
-        ORG_NAME: "{{ org_name }}"
-        STATE: "{{ state }}"
+        CERT_VALIDITY_DAYS: "365"
+        CA_ORG_NAME: "{{ ca_org_name }}"
+        CA_STATE: "{{ ca_state }}"
         SAN_LIST: "{{ san_list }}"
-        GENERATE_CERTIFICATE: "true"
       delegate_to: localhost
-      register: python_script_output
-      become: false
 
-    - name: Show python script output
-      debug:
-        var: python_script_output
+  tags: 
+    - ca
 
 - name: Copy generated certificates to the remote server
   vars:
-    local_cert_base_path: "{{ cert_storage_path }}/{{ ssl_cert_common_name }}"
+    cert_type: "server"
+    local_cert_base_path: "{{ cert_storage_path }}/ca/certificates/{{ cert_type }}_{{ ssl_cert_common_name }}"
+    file_name: "{{ ssl_cert_common_name }}"
   copy:
     src: "{{ item.src }}"
     dest: "{{ item.dest }}"
     mode: "{{ item.mode }}"
+    force: true
   loop:
-    - src: "{{ local_cert_base_path }}/{{ ssl_cert_common_name }}.cert.pem"
-      dest: "{{ remote_certs_dir }}/{{ ssl_cert_common_name }}.cert.pem"
+    - src: "{{ local_cert_base_path }}/{{ file_name }}.cert.pem"
+      dest: "{{ remote_certs_dir }}/{{ file_name }}.cert.pem"
       mode: '0644'
-    - src: "{{ local_cert_base_path }}/{{ ssl_cert_common_name }}.key.pem"
-      dest: "{{ remote_certs_dir }}/{{ ssl_cert_common_name }}.key.pem"
+    - src: "{{ local_cert_base_path }}/{{ file_name }}.key.pem"
+      dest: "{{ remote_certs_dir }}/{{ file_name }}.key.pem"
       mode: '0600'
     - src: "{{ cert_storage_path }}/ca/ca.cert.pem"
       dest: "{{ remote_certs_dir }}/ca.cert.pem"
@@ -121,7 +122,6 @@
     clickhouse_template_files:
       - { src: 'cluster.xml.j2', dest: '{{ clickhouse_config_dir }}/cluster.xml' }
       - { src: 'ssl.xml.j2', dest: '{{ clickhouse_config_dir }}/ssl.xml' }
-      - { src: 'docker_related_config.xml.j2', dest: '{{ clickhouse_config_dir }}/docker_related_config.xml' }
       # - { src: 'macros.xml.j2', dest: '{{ clickhouse_config_dir }}/macros.xml' }
       - { src: 'network.xml.j2', dest: '{{ clickhouse_config_dir }}/network.xml' }
       - { src: 'other_db_customizations.xml.j2', dest: '{{ clickhouse_config_dir }}/other_db_customizations.xml' }
@@ -135,16 +135,11 @@
       - { src: 'query_log_copier.sh', dest: '{{ gdw_dir }}/query_log_copier.sh' }
     all_clickhouse_files: "{{ clickhouse_template_files + clickhouse_static_files }}"
   block: 
-  - name: Remove existing ClickHouse configuration files
-    file:
-      path: "{{ item.dest }}"
-      state: absent
-    loop: "{{ all_clickhouse_files }}"
-
   - name: Upload primary ClickHouse configuration templates
     template:
       src: "{{ item.src }}"
       dest: "{{ item.dest }}"
+      force: true
       owner: clickhouse
       group: clickhouse
       mode: '0644'
@@ -154,32 +149,14 @@
     copy:
       src: "{{ item.src }}"
       dest: "{{ item.dest }}"
+      force: true
       owner: clickhouse
       group: clickhouse
       mode: '0644'
     loop: "{{ clickhouse_static_files }}"
-
-  - name: Set ownership and permissions for ClickHouse configuration files
-    file:
-      path: "{{ item }}"
-      owner: "clickhouse"
-      group: "clickhouse"
-      mode: '0755'
-    loop: "{{ all_clickhouse_files | map(attribute='dest') }}"
-
-  - name: Set ownership and permissions for ClickHouse configuration directory
-    file:
-      path: "{{ item }}"
-      owner: "clickhouse"
-      group: "clickhouse"
-      recurse: yes
-      mode: '0755'
-    loop: 
-      - "{{ clickhouse_config_dir }}"
-      - "{{ clickhouse_users_dir }}"
   tags:
+    - copy
     - config
-    - ClickhouseConfig
 
 - name: Verify required directories exist on the remote host
   stat:
