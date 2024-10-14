@@ -1,5 +1,8 @@
 ---
-      
+- name: Debug variables
+  debug:
+    msg: "Host: {{ inventory_hostname }} | Node Number: {{ hostvars[inventory_hostname]['node_number'] }} | SSL Cert Common Name: {{ hostvars[inventory_hostname]['ssl_cert_common_name'] }}"
+
 - name: generate SAN_LIST
   block:
     - name: gather FQDN of the server
@@ -27,30 +30,9 @@
 
 - name: Configure Local Certificate Authority
   block:
-    - name: Create directory for generated certificates locally
+    - name: Generate server certificate with certificate_management.py for this server
       become: false
-      local_action:
-        module: file
-        path: "{{ cert_storage_path }}"
-        state: directory
-        mode: '0755'
-      delegate_to: localhost
-
-    - name: Generate Certificate Authority (CA) if not present with certificate_management.py
-      become: false
-      local_action: command python3 /home/marckeelingiv/dev/proof_of_concept/marc/py_ca/certificate_management.py
-      environment:
-        # CA_PASSPHRASE: "{{ ca_passphrase }}"
-        REQUEST_TYPE: "generate_ca"
-        CA_STORAGE_PATH: "{{ cert_storage_path }}/ca"
-        CA_VALIDITY_YEARS: "2"
-        CA_ORG_NAME: "{{ ca_org_name }}"
-        CA_STATE: "{{ ca_state }}"
-      delegate_to: localhost
-
-    - name: Generate server certificate with certificate_management.py
-      become: false
-      local_action: command python3 /home/marckeelingiv/dev/proof_of_concept/marc/py_ca/certificate_management.py
+      local_action: python3 {{ playbook_dir }}/../py_ca/certificate_management.py
       environment:
         # CA_PASSPHRASE: "{{ ca_passphrase }}"
         REQUEST_TYPE: "generate_server_cert"

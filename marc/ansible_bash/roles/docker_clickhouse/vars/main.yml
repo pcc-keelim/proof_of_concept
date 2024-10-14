@@ -1,6 +1,6 @@
 ca_cert_path: "/etc/ssl/certs/clickhouse-ca-cert.pem"
 ca_key_path: "/etc/ssl/private/clickhouse-ca-key.pem"
-ssl_cert_common_name: "clickhouse_etl"
+ssl_cert_common_name: "{{ hostvars[inventory_hostname]['ssl_cert_common_name'] }}"
 # ca_passphrase: "your_simple_ca_passphrase"
 cert_storage_path: "/home/marckeelingiv/dev/proof_of_concept/marc/tmp"
 cert_name: "clickhouse"
@@ -23,10 +23,10 @@ clickhouse:
         - replicas:
           - host: dc2-ds-etl-01.int.collectivemedicaltech.com
             port: 9000
-    #       - host: dc2-ds-db-01.int.collectivemedicaltech.com
-    #         port: 9000
-    #       - host: dc2-ds-analysis-01.int.collectivemedicaltech.com
-    #         port: 9000
+          - host: dc2-ds-db-01.int.collectivemedicaltech.com
+            port: 9000
+          - host: dc2-ds-analysis-01.int.collectivemedicaltech.com
+            port: 9000
     # - name: three_shared_one_replica
     #   shards:
     #     - replicas:
@@ -38,7 +38,7 @@ clickhouse:
     #         port: 9000
   keeper_server:
     tcp_port: 9181
-    server_id: 1
+    server_id: "{{ hostvars[inventory_hostname]['node_number']}}"
     log_storage_path: /var/lib/clickhouse/coordination/log
     snapshot_storage_path: /var/lib/clickhouse/coordination/snapshots
     operation_timeout_ms: 10000

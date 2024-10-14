@@ -3,4 +3,5 @@
   gather_facts: false
   become: true
   roles:
+    - ../roles/ca_management
     - ../roles/docker_clickhouse
