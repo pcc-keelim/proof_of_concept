@@ -1,0 +1,19 @@
+- name: Ensure Certificate Authority exists
+  block:
+    - name: Check if CA directory exists
+      stat:
+        path: "{{ cert_storage_path }}/ca"
+      register: ca_exists
+
+    - name: Generate Certificate Authority (CA) if not present
+      command:  python3 {{ playbook_dir }}/../py_ca/certificate_management.py
+      environment:
+        REQUEST_TYPE: "generate_ca"
+        CA_STORAGE_PATH: "{{ cert_storage_path }}/ca"
+        CA_VALIDITY_YEARS: "2"
+        CA_ORG_NAME: "{{ ca_org_name }}"
+        CA_STATE: "{{ ca_state }}"
+      when: not ca_exists.stat.exists
+
+  tags: 
+    - ca
