@@ -49,37 +49,43 @@ RUN dbt deps
 
 
 # # Install vscode server
-RUN curl -fsSL https://code-server.dev/install.sh | sh
+# RUN curl -fsSL https://code-server.dev/install.sh | sh
 # RUN curl -Lk 'https://code.visualstudio.com/sha/download?build=stable&os=cli-alpine-x64' --output vscode_cli.tar.gz
 # RUN tar -xf vscode_cli.tar.gz
 
-# # Install the extensions
-# RUN code-server --install-extension github.copilot
-# RUN code-server --install-extension github.copilot-chat
-# RUN code-server --install-extension ms-python.vscode-pylance
-# RUN code-server --install-extension visualstudioexptteam.intellicode-api-usage-examples
-# RUN code-server --install-extension visualstudioexptteam.vscodeintellicode
-# RUN code-server --install-extension ms-vsliveshare.vsliveshare
-# RUN code-server --install-extension wisetime.branch-in-window-title
-RUN code-server --install-extension gruntfuggly.todo-tree
-RUN code-server --install-extension kevinrose.vsc-python-indent
-RUN code-server --install-extension mark-wiemer.vscode-autohotkey-plus-plus     
-RUN code-server --install-extension mechatroner.rainbow-csv
-RUN code-server --install-extension ms-python.debugpy
-RUN code-server --install-extension ms-python.isort
-RUN code-server --install-extension ms-python.python
-RUN code-server --install-extension ms-toolsai.jupyter
-RUN code-server --install-extension ms-toolsai.jupyter-keymap
-RUN code-server --install-extension ms-toolsai.vscode-jupyter-cell-tags
-RUN code-server --install-extension ms-toolsai.vscode-jupyter-slideshow
-RUN code-server --install-extension ms-vscode.makefile-tools
-RUN code-server --install-extension ms-vscode.notepadplusplus-keybindings       
-RUN code-server --install-extension redhat.vscode-yaml
-RUN code-server --install-extension streetsidesoftware.code-spell-checker
-RUN code-server --install-extension tamasfe.even-better-toml
-RUN code-server --install-extension vmware.vscode-manifest-yaml
-RUN code-server --install-extension vscjava.vscode-gradle
-RUN code-server --install-extension vscjava.vscode-maven
+# RUN apt install software-properties-common apt-transport-https wget -y
+# RUN wget -q https://packages.microsoft.com/keys/microsoft.asc -O- |  apt-key add -
+# RUN add-apt-repository "deb [arch=amd64] https://packages.microsoft.com/repos/vscode stable main"
+# RUN apt update
+# RUN apt install code -y
+
+# # # Install the extensions
+# # RUN code-server --install-extension github.copilot
+# # RUN code-server --install-extension github.copilot-chat
+# # RUN code-server --install-extension ms-python.vscode-pylance
+# # RUN code-server --install-extension visualstudioexptteam.intellicode-api-usage-examples
+# # RUN code-server --install-extension visualstudioexptteam.vscodeintellicode
+# # RUN code-server --install-extension ms-vsliveshare.vsliveshare
+# # RUN code-server --install-extension wisetime.branch-in-window-title
+# RUN code-server --install-extension gruntfuggly.todo-tree
+# RUN code-server --install-extension kevinrose.vsc-python-indent
+# RUN code-server --install-extension mark-wiemer.vscode-autohotkey-plus-plus     
+# RUN code-server --install-extension mechatroner.rainbow-csv
+# RUN code-server --install-extension ms-python.debugpy
+# RUN code-server --install-extension ms-python.isort
+# RUN code-server --install-extension ms-python.python
+# RUN code-server --install-extension ms-toolsai.jupyter
+# RUN code-server --install-extension ms-toolsai.jupyter-keymap
+# RUN code-server --install-extension ms-toolsai.vscode-jupyter-cell-tags
+# RUN code-server --install-extension ms-toolsai.vscode-jupyter-slideshow
+# RUN code-server --install-extension ms-vscode.makefile-tools
+# RUN code-server --install-extension ms-vscode.notepadplusplus-keybindings       
+# RUN code-server --install-extension redhat.vscode-yaml
+# RUN code-server --install-extension streetsidesoftware.code-spell-checker
+# RUN code-server --install-extension tamasfe.even-better-toml
+# RUN code-server --install-extension vmware.vscode-manifest-yaml
+# RUN code-server --install-extension vscjava.vscode-gradle
+# RUN code-server --install-extension vscjava.vscode-maven
 
 
 # Expose the port
