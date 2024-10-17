@@ -1,5 +1,5 @@
 ---
-- hosts: [control-node]
+- hosts: [clickhouse-nodes]
   gather_facts: false
   become: true
   roles:

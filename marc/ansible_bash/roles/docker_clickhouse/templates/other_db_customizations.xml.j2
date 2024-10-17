@@ -1,7 +1,7 @@
 <clickhouse>
     <max_table_size_to_drop>0</max_table_size_to_drop>
     <max_partition_size_to_drop>0</max_partition_size_to_drop>
-    <max_server_memory_usage_to_ram_ratio>0.9</max_server_memory_usage_to_ram_ratio>
+    <max_server_memory_usage_to_ram_ratio>{{ hostvars[inventory_hostname]['clickhouse_memory_usage_ratio'] }}</max_server_memory_usage_to_ram_ratio>
     <!-- https://clickhouse.com/docs/en/operations/backup -->
     <storage_configuration>
         <disks>

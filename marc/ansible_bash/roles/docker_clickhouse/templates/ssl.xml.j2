@@ -10,8 +10,9 @@
             <verificationMode>relaxed</verificationMode>
             <loadDefaultCAFile>false</loadDefaultCAFile>
             <cacheSessions>true</cacheSessions>
-            <disableProtocols>sslv2,sslv3</disableProtocols>
+            <disableProtocols>sslv2,sslv3,tlsv1,tlsv1.1</disableProtocols>
             <preferServerCiphers>true</preferServerCiphers>
+            <cipherList>TLSv1.2:TLSv1.3</cipherList>
             <invalidCertificateHandler>
                 <name>RejectCertificateHandler</name>
             </invalidCertificateHandler>
@@ -19,8 +20,9 @@
         <client> <!-- Used for connecting to https dictionary source and secured Zookeeper communication -->
             <loadDefaultCAFile>true</loadDefaultCAFile>
             <cacheSessions>true</cacheSessions>
-            <disableProtocols>sslv2,sslv3</disableProtocols>
+            <disableProtocols>sslv2,sslv3,tlsv1,tlsv1.1</disableProtocols>
             <preferServerCiphers>true</preferServerCiphers>
+            <cipherList>TLSv1.2:TLSv1.3</cipherList>
             <!-- Use for self-signed: <verificationMode>none</verificationMode> -->
             <invalidCertificateHandler>
                 <!-- Use for self-signed: <name>AcceptCertificateHandler</name> -->

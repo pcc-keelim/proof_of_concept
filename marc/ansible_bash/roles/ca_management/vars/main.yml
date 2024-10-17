@@ -1,0 +1,4 @@
+cert_storage_path: "/home/marckeelingiv/dev/proof_of_concept/marc/tmp"
+certificate_owner: clickhouse
+certificate_group: clickhouse
+remote_certs_dir: "/gdw/certs"

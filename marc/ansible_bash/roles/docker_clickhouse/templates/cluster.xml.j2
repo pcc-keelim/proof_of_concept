@@ -16,7 +16,7 @@
         {% endfor %}
     </remote_servers>
 
-    <keeper_server>  
+    <keeper_server>
         <tcp_port>{{ clickhouse.keeper_server.tcp_port }}</tcp_port>  
         <server_id>{{ clickhouse.keeper_server.server_id }}</server_id>  
         <log_storage_path>{{ clickhouse.keeper_server.log_storage_path }}</log_storage_path>  
@@ -31,11 +31,11 @@
         <raft_configuration>  
             {% for server in clickhouse.keeper_server.raft_configuration %}
             <server>  
-                <id>{{ server.id }}</id>  
-                <hostname>{{ server.hostname }}</hostname>  
-                <port>{{ server.port }}</port>  
-            </server>  
+                <id>{{ server.id }}</id>
+                <hostname>{{ server.hostname }}</hostname>
+                <port>{{ server.port }}</port>
+            </server>
             {% endfor %}
-        </raft_configuration>  
+        </raft_configuration> 
     </keeper_server>
 </clickhouse>

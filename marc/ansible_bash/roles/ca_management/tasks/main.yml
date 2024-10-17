@@ -1,11 +1,13 @@
-- name: Ensure Certificate Authority exists
+- name: Configure Local Certificate Authority
   block:
     - name: Check if CA directory exists
       stat:
         path: "{{ cert_storage_path }}/ca"
       register: ca_exists
+      become: false
+      delegate_to: localhost
 
-    - name: Generate Certificate Authority (CA) if not present
+    - name: Generate/Configure Certificate Authority (CA) if not present
       command:  python3 {{ playbook_dir }}/../py_ca/certificate_management.py
       environment:
         REQUEST_TYPE: "generate_ca"
@@ -13,7 +15,102 @@
         CA_VALIDITY_YEARS: "2"
         CA_ORG_NAME: "{{ ca_org_name }}"
         CA_STATE: "{{ ca_state }}"
+        CERT_NAME: "{{ cert_name }}"
       when: not ca_exists.stat.exists
+      become: false
+      delegate_to: localhost
 
   tags: 
     - ca
+
+- name: Configure then Generate Server certificate locally
+  block: 
+    - name: gather FQDN of the server
+      command: hostname -f
+      register: fqdn_output
+
+    - name: Gather primary IP address of the server
+      command: hostname -I
+      register: ip_output
+
+    - name: Gather all IP addresses assigned to the server
+      shell: ip -o -4 addr show | awk '{print $4}' | cut -d/ -f1
+      register: all_ips_output
+
+    - name: Prepare SAN_LIST by combining FQDN and IP addresses
+      set_fact:
+        san_list: "{{ fqdn_output.stdout }},{{ ip_output.stdout.split()[0] }},{{ all_ips_output.stdout_lines | join(',') }}"
+    
+    - name: Remove duplicate entries from SAN_LIST
+      set_fact:
+        san_list: "{{ san_list.split(',') | unique | join(',') }}"
+    
+    - name: Display the SAN_LIST for debugging
+      debug:
+        msg: "SAN_LIST is {{ san_list }}"
+
+    - name: Generate server certificate with certificate_management.py for this server
+      become: false
+      command: "python3 /home/marckeelingiv/dev/proof_of_concept/marc/py_ca/certificate_management.py"
+      environment:
+        # CA_PASSPHRASE: "{{ ca_passphrase }}"
+        REQUEST_TYPE: "generate_server_cert"
+        CA_STORAGE_PATH: "{{ cert_storage_path }}/ca"
+        CERT_TYPE: "server"
+        CERT_NAME: "{{ ssl_cert_common_name }}"
+        CERT_VALIDITY_DAYS: "365"
+        CA_ORG_NAME: "{{ ca_org_name }}"
+        CA_STATE: "{{ ca_state }}"
+        SAN_LIST: "{{ san_list }}"
+      delegate_to: localhost
+      tags:
+        - generate_server_certs
+
+- name: Ensure the /gdw/certs directory exists
+  file:
+    path: "{{ remote_certs_dir }}"
+    state: directory
+    owner: "{{ certificate_owner }}"
+    group: "{{ certificate_group }}"
+    mode: '0755'
+  become: true
+  tags:
+    - create_certs_dir
+
+- name: Remote server certificate copy & set permissions
+  block:
+  - name: Copy generated certificates to the remote server
+    vars:
+      cert_type: "server"
+      local_cert_base_path: "{{ cert_storage_path }}/ca/certificates/{{ cert_type }}_{{ ssl_cert_common_name }}"
+      file_name: "{{ ssl_cert_common_name }}"
+    copy:
+      src: "{{ item.src }}"
+      dest: "{{ item.dest }}"
+      mode: "{{ item.mode }}"
+      force: true
+    loop:
+      - src: "{{ local_cert_base_path }}/{{ file_name }}.cert.pem"
+        dest: "{{ remote_certs_dir }}/{{ file_name }}.cert.pem"
+        mode: '0644'
+      - src: "{{ local_cert_base_path }}/{{ file_name }}.key.pem"
+        dest: "{{ remote_certs_dir }}/{{ file_name }}.key.pem"
+        mode: '0600'
+      - src: "{{ cert_storage_path }}/ca/ca.cert.pem"
+        dest: "{{ remote_certs_dir }}/ca.cert.pem"
+        mode: '0644'
+    tags:
+      - copy
+
+  - name: Set the owner and group of the certificate files to clickhouse:clickhouse
+    file:
+      path: "{{ item.dest }}"
+      owner: "{{ certificate_owner }}"
+      group: "{{ certificate_group }}"
+      recurse: no
+    loop:
+      - { dest: "{{ remote_certs_dir }}/{{ ssl_cert_common_name }}.cert.pem" }
+      - { dest: "{{ remote_certs_dir }}/{{ ssl_cert_common_name }}.key.pem" }
+      - { dest: "{{ remote_certs_dir }}/ca.cert.pem" }
+    tags:
+      - permissions

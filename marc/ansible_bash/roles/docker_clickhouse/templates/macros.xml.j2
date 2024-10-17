@@ -1,0 +1,6 @@
+<clickhouse>
+    <macros>
+        <shard>{{ hostvars[inventory_hostname]['shard'] }}</shard>
+        <replica>{{ hostvars[inventory_hostname]['replica'] }}</replica>
+    </macros>
+</clickhouse>

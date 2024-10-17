@@ -14,6 +14,7 @@ services:
       - 9010:9010
       - 9440:9440
     volumes:
+      - {{ clickhouse_data_dir }}:/var/lib/clickhouse
       - {{ clickhouse_config_dir }}:/etc/clickhouse-server/config.d
       - {{ clickhouse_users_dir}}:/etc/clickhouse-server/users.d
       - {{ clickhouse_init_dir}}:/docker-entrypoint-initdb.d

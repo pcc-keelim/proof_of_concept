@@ -3,87 +3,6 @@
   debug:
     msg: "Host: {{ inventory_hostname }} | Node Number: {{ hostvars[inventory_hostname]['node_number'] }} | SSL Cert Common Name: {{ hostvars[inventory_hostname]['ssl_cert_common_name'] }}"
 
-- name: generate SAN_LIST
-  block:
-    - name: gather FQDN of the server
-      command: hostname -f
-      register: fqdn_output
-    - name: Gather primary IP address of the server
-      command: hostname -I
-      register: ip_output
-
-    - name: Gather all IP addresses assigned to the server
-      shell: ip -o -4 addr show | awk '{print $4}' | cut -d/ -f1
-      register: all_ips_output
-
-    - name: Prepare SAN_LIST by combining FQDN and IP addresses
-      set_fact:
-        san_list: "{{ fqdn_output.stdout }},{{ ip_output.stdout.split()[0] }},{{ all_ips_output.stdout_lines | join(',') }}"
-    
-    - name: Remove duplicate entries from SAN_LIST
-      set_fact:
-        san_list: "{{ san_list.split(',') | unique | join(',') }}"
-    
-    - name: Display the SAN_LIST for debugging
-      debug:
-        msg: "SAN_LIST is {{ san_list }}"
-
-- name: Configure Local Certificate Authority
-  block:
-    - name: Generate server certificate with certificate_management.py for this server
-      become: false
-      local_action: python3 {{ playbook_dir }}/../py_ca/certificate_management.py
-      environment:
-        # CA_PASSPHRASE: "{{ ca_passphrase }}"
-        REQUEST_TYPE: "generate_server_cert"
-        CA_STORAGE_PATH: "{{ cert_storage_path }}/ca"
-        CERT_TYPE: "server"
-        CERT_NAME: "{{ ssl_cert_common_name }}"
-        CERT_VALIDITY_DAYS: "365"
-        CA_ORG_NAME: "{{ ca_org_name }}"
-        CA_STATE: "{{ ca_state }}"
-        SAN_LIST: "{{ san_list }}"
-      delegate_to: localhost
-
-  tags: 
-    - ca
-
-- name: Copy generated certificates to the remote server
-  vars:
-    cert_type: "server"
-    local_cert_base_path: "{{ cert_storage_path }}/ca/certificates/{{ cert_type }}_{{ ssl_cert_common_name }}"
-    file_name: "{{ ssl_cert_common_name }}"
-  copy:
-    src: "{{ item.src }}"
-    dest: "{{ item.dest }}"
-    mode: "{{ item.mode }}"
-    force: true
-  loop:
-    - src: "{{ local_cert_base_path }}/{{ file_name }}.cert.pem"
-      dest: "{{ remote_certs_dir }}/{{ file_name }}.cert.pem"
-      mode: '0644'
-    - src: "{{ local_cert_base_path }}/{{ file_name }}.key.pem"
-      dest: "{{ remote_certs_dir }}/{{ file_name }}.key.pem"
-      mode: '0600'
-    - src: "{{ cert_storage_path }}/ca/ca.cert.pem"
-      dest: "{{ remote_certs_dir }}/ca.cert.pem"
-      mode: '0644'
-  tags:
-    - copy
-
-- name: Set the owner and group of the certificate files to clickhouse:clickhouse
-  file:
-    path: "{{ item.dest }}"
-    owner: "clickhouse"
-    group: "clickhouse"
-    recurse: no
-  loop:
-    - { dest: "{{ remote_certs_dir }}/{{ ssl_cert_common_name }}.cert.pem" }
-    - { dest: "{{ remote_certs_dir }}/{{ ssl_cert_common_name }}.key.pem" }
-    - { dest: "{{ remote_certs_dir }}/ca.cert.pem" }
-  tags:
-    - permissions
-
 - name: Create directories for ClickHouse
   file:
     path: "{{ item }}"
@@ -96,15 +15,16 @@
     - "{{ clickhouse_users_dir }}"
     - "{{ clickhouse_init_dir }}"
     - "{{ clickhouse_logs_dir }}"
+    - "{{ clickhouse_data_dir }}"
   tags:
     - config
 
 - name: Clickhouse Config files
   vars:
-    clickhouse_template_files:
+    clickhouse_dynamic_files:
       - { src: 'cluster.xml.j2', dest: '{{ clickhouse_config_dir }}/cluster.xml' }
       - { src: 'ssl.xml.j2', dest: '{{ clickhouse_config_dir }}/ssl.xml' }
-      # - { src: 'macros.xml.j2', dest: '{{ clickhouse_config_dir }}/macros.xml' }
+      - { src: 'macros.xml.j2', dest: '{{ clickhouse_config_dir }}/macros.xml' }
       - { src: 'network.xml.j2', dest: '{{ clickhouse_config_dir }}/network.xml' }
       - { src: 'other_db_customizations.xml.j2', dest: '{{ clickhouse_config_dir }}/other_db_customizations.xml' }
       - { src: 'users.xml.j2', dest: '{{ clickhouse_users_dir }}/users.xml' }
@@ -115,9 +35,9 @@
       - { src: 'create_users.sql', dest: '{{ clickhouse_init_dir }}/create_users.sql' }
       # - { src: 'query_log_copier_starter.sh', dest: '{{ clickhouse_init_dir }}/query_log_copier_starter.sh' }
       - { src: 'query_log_copier.sh', dest: '{{ gdw_dir }}/query_log_copier.sh' }
-    all_clickhouse_files: "{{ clickhouse_template_files + clickhouse_static_files }}"
+    all_clickhouse_files: "{{ clickhouse_dynamic_files + clickhouse_static_files }}"
   block: 
-  - name: Upload primary ClickHouse configuration templates
+  - name: Upload dynamic ClickHouse configuration files
     template:
       src: "{{ item.src }}"
       dest: "{{ item.dest }}"
@@ -125,9 +45,9 @@
       owner: clickhouse
       group: clickhouse
       mode: '0644'
-    loop: "{{ clickhouse_template_files }}"
+    loop: "{{ clickhouse_dynamic_files }}"
   
-  - name: Upload primary Clickhouse configuration files
+  - name: Upload static Clickhouse configuration files
     copy:
       src: "{{ item.src }}"
       dest: "{{ item.dest }}"
@@ -148,6 +68,7 @@
     - { path: "{{ clickhouse_config_dir }}", error_message: "clickhouse_config_dir does not exist on the remote host." }
     - { path: "{{ remote_certs_dir }}", error_message: "remote_certs_dir does not exist on the remote host." }
     - { path: "{{ clickhouse_logs_dir }}", error_message: "clickhouse_logs_dir does not exist on the remote host." }
+    - { path: "{{ clickhouse_data_dir }}", error_message: "clickhouse_data_dir does not exist on the remote host." }
     - { path: "{{ clickhouse_init_dir }}", error_message: "clickhouse_init_dir does not exist on the remote host." }
     - { path: "{{ gdw_dir }}", error_message: "gdw_dir does not exist on the remote host." }
     - { path: "{{ gdw_dir }}/certs", error_message: "gdw_dir/certs does not exist on the remote host." }
@@ -157,7 +78,7 @@
 - name: Task Group - Docker Download, transfer, and upload
   block:
     - name: Check if the Docker image exists on the remote host
-      shell: docker images -q clickhouse/clickhouse-server:23.10.5.20
+      shell: "docker images -q clickhouse/clickhouse-server:{{ clickhouse_version }}"
       register: image_exists
       changed_when: false
 
@@ -169,13 +90,13 @@
     - name: Pull the Docker image on the local machine if it's not present on the remote host
       docker_image:
         name: clickhouse/clickhouse-server
-        tag: 23.10.5.20
+        tag: "{{ clickhouse_version }}"
         source: pull
       delegate_to: localhost
       when: image_exists.stdout == ""
 
     - name: Save Docker image to a tar file locally
-      command: docker save -o /tmp/clickhouse-server.tar clickhouse/clickhouse-server:23.10.5.20
+      command: "docker save -o /tmp/clickhouse-server.tar clickhouse/clickhouse-server:{{ clickhouse_version }}"
       delegate_to: localhost
       when: image_exists.stdout == ""
 
@@ -192,7 +113,7 @@
     - name: Ensure the Docker image is present on the remote host
       docker_image:
         name: clickhouse/clickhouse-server
-        tag: 23.10.5.20
+        tag: "{{ clickhouse_version }}"
         source: load
       when: image_exists.stdout == ""
   tags:
@@ -230,6 +151,4 @@
       command: docker compose -f {{ gdw_dir }}/docker-compose-clickhouse.yml up -d
   tags:
     - docker
-
-
 

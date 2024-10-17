@@ -10,3 +10,10 @@
 ## prepare_knowledge_base.py
 Python script that will recursively gather all the files in a target folder and add their contents to a single file, which you can then upload into a custom ChatGPT instance to serve as the knowledge base. It will also add to the top of the output the file structure to better give context to the gpt. 
 `python3 prepare_knowlege_base.py ./ ~/Downloads`
+
+## configuration
+Need to add the following to your `~/.bashrc`
+```bash
+export ANSIBLE_USER=your_user_name
+```
+
