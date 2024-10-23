@@ -21,6 +21,7 @@ services:
       - {{ clickhouse_logs_dir }}:/var/log/clickhouse-server
       # Below may need to change to the default location of the certs on the server
       - {{ remote_certs_dir }}:{{ remote_certs_dir }}
+    restart: always
     environment:
       - TZ=America/Denver
       # UID of clickhouse user on host machine
